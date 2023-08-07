@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:dart_console/dart_console.dart';
@@ -6,7 +5,7 @@ import 'package:dart_console/dart_console.dart';
 import 'ansi.dart' as c;
 import 'console.dart';
 
-typedef EntryFormatter<T> = String Function(T, int);
+typedef EntryFormatter<T> = String Function(T);
 
 abstract class _Chooser<T, R> {
   final List<T> _options;
@@ -26,8 +25,12 @@ abstract class _Chooser<T, R> {
     while (true) {
       final key = console.readKey();
       if (key.controlChar == ControlCharacter.enter && _result != null) break;
-      if (key.controlChar == ControlCharacter.ctrlC) exit(1);
-      // if (key.controlChar == ControlCharacter.ctrlC) synkExit(1);
+
+      // graceful exit handling (yummy yummy yummy in my tummy tummy tummy)
+      if (key.controlChar == ControlCharacter.ctrlC) {
+        console.showCursor();
+        throw SynkOut(1);
+      }
 
       _keyCallback(key);
 
@@ -87,12 +90,12 @@ abstract class _Chooser<T, R> {
   }
 
   String _format(T t, int idx, String format) {
-    return format + (_formatter ?? (t, idx) => "$t")(t, idx);
+    return format + (_formatter ?? (t) => t.toString())(t);
   }
 }
 
 class Chooser<T> extends _Chooser<T, T> {
-  Chooser(super.options, super.focused, {EntryFormatter? formatter}) : super(formatter: formatter);
+  Chooser(super.options, super.focused, {EntryFormatter<T>? formatter}) : super(formatter: formatter);
 
   @override
   void _keyCallback(Key input) {}

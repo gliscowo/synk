@@ -1,29 +1,38 @@
 import 'config.dart';
 import 'types.dart';
 
-class ModDatabase {
-  final Map<String, Mod> _cache = {};
+class ProjectDatabase {
+  static const _projectPath = ["projects"];
+
+  final Map<String, Project> _cache = {};
   final ConfigProvider _provider;
 
-  ModDatabase(this._provider);
+  ProjectDatabase(this._provider);
 
-  Mod operator [](String id) {
+  Project? operator [](String id) {
     var cached = _cache[id];
     if (cached != null) return cached;
 
-    var data = _provider.readConfigData(id, path: ["projects"]);
-    if (data == null) {
-      throw StateError("No mod with id '$id' in database");
+    var data = _provider.readConfigData(id, path: _projectPath);
+    if (data == null) return null;
+
+    return _cache[id] = Project.fromJson(data);
+  }
+
+  void operator []=(String id, Project? project) {
+    if (project != null) {
+      _cache[id] = project;
+      _provider.saveConfigData(id, project.toJson(), path: _projectPath);
+    } else {
+      if (!index.any((element) => element.projectId == id)) return;
+
+      _cache[id] == null;
+      _provider.deleteConfigData(id, path: _projectPath);
     }
-
-    return _cache[id] = Mod.fromJson(data);
   }
 
-  void operator []=(String id, Mod mod) {
-    _cache[id] = mod;
-    _provider.saveConfigData(id, mod.toJson(), path: ["projects"]);
-  }
+  bool contains(String id) => index.any((element) => element.projectId == id);
 
   /// Provide an index of all mods currently persisted on disk
-  Iterable<Mod> get index => _provider.listAllIn(["projects"]).map((e) => _cache[e.$1] ?? Mod.fromJson(e.$2()));
+  Iterable<Project> get index => _provider.listAllIn(_projectPath).map((e) => _cache[e.$1] ?? Project.fromJson(e.$2()));
 }

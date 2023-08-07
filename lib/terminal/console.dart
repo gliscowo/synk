@@ -7,12 +7,12 @@ import 'chooser.dart';
 
 final console = Console.scrolling();
 
-extension synkConsole on Console {
-  /// Get a full line of input from the user, exiting the
-  /// program if a break character is received
+extension SynkConsole on Console {
+  /// Get a full line of input from the user, and throw
+  /// a [SynkOut] error if the break character is received
   String getLine() {
     final input = readLine(cancelOnBreak: true);
-    if (input == null) exit(1);
+    if (input == null) throw SynkOut(1);
 
     return input;
   }
@@ -21,12 +21,12 @@ extension synkConsole on Console {
   ///
   /// Entries are formatted by invoking [formatter]
   /// and [selected] can override which entry the picker starts on
-  T choose<T>(List<T> options, String prompt, {int selected = 0, EntryFormatter? formatter}) {
+  T choose<T>(List<T> options, String prompt, {int selected = 0, EntryFormatter<T>? formatter}) {
     writeLine("$inputColor$prompt ${c.reset}❯ ");
 
     var chosen = Chooser(options, selected, formatter: formatter).choose();
     cursorUp();
-    writeLine("$inputColor$prompt ${c.reset}❯ $chosen");
+    writeLine("$inputColor$prompt ${c.reset}❯ ${(formatter ?? (e) => e.toString())(chosen)}");
 
     return chosen;
   }
@@ -36,12 +36,12 @@ extension synkConsole on Console {
   /// Entries are formatted by invoking [formatter]
   /// and [selected] can provide a set of entries to pre-select
   List<T> chooseMultiple<T>(List<T> options, String prompt,
-      {List<T> selected = const [], bool allowNone = true, EntryFormatter? formatter}) {
+      {List<T> selected = const [], bool allowNone = true, EntryFormatter<T>? formatter}) {
     writeLine("$inputColor$prompt ${c.reset}❯ ");
 
     var chosen = MultiChooser(options, 0, allowNone, selected).choose();
     cursorUp();
-    writeLine("$inputColor$prompt ${c.reset}❯ ${chosen.join(", ")}");
+    writeLine("$inputColor$prompt ${c.reset}❯ ${chosen.map(formatter ?? (e) => e.toString()).join(", ")}");
 
     return chosen;
   }
@@ -76,9 +76,29 @@ extension synkConsole on Console {
     final input = stdin.readLineSync();
     stdin.lineMode = true;
     stdin.echoMode = true;
+    writeLine();
 
     return input ?? "";
   }
+
+  void moveCursor({int up = 0, int down = 0, int left = 0, int right = 0}) {
+    for (int i = 0; i < up; i++) {
+      cursorUp();
+    }
+    for (int i = 0; i < down; i++) {
+      cursorDown();
+    }
+    for (int i = 0; i < left; i++) {
+      cursorLeft();
+    }
+    for (int i = 0; i < right; i++) {
+      cursorRight();
+    }
+  }
+}
+
+extension Capitalize on String {
+  String get capitalized => this[0].toUpperCase() + substring(1);
 }
 
 final String inputColor = rgbColor(0x0AA1DD);
@@ -89,4 +109,9 @@ String rgbColor(int rgb) => "${c.ansiEscape}38;2;${rgb >> 16};${(rgb >> 8) & 0xF
 
 abstract class Formattable {
   c.AnsiControlSequence get color;
+}
+
+class SynkOut implements Exception {
+  final int code;
+  SynkOut(this.code);
 }

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 
+import '../terminal/ansi.dart' as c;
+
 abstract class SynkCommand extends Command<void> {
   @override
   final String name;
@@ -16,6 +18,9 @@ abstract class SynkCommand extends Command<void> {
   @override
   FutureOr<void> run() {
     if (argResults!.rest.length < _arguments.length) {
+      final missing = _arguments.sublist(argResults!.rest.length).map((e) => "<$e>");
+      print("${c.red}Missing ${missing.length == 1 ? "argument" : "arguments"}: ${missing.join(" ")}${c.reset}");
+
       printUsage();
       return null;
     }
