@@ -1,11 +1,13 @@
 import 'config.dart';
 
 class TokenStore {
+  static const _filename = "tokens";
+
   final ConfigProvider _provider;
   late Map<String, String> _tokens;
 
   TokenStore(this._provider) {
-    _tokens = _provider.readConfigData("tokens")?.cast<String, String>() ?? {};
+    _tokens = _provider.readConfigData(_filename)?.cast<String, String>() ?? {};
   }
 
   /// Get the token stored under the given identifier,
@@ -26,6 +28,6 @@ class TokenStore {
       _tokens.remove(identifier);
     }
 
-    _provider.saveConfigData("tokens", _tokens);
+    _provider.saveConfigData(_filename, _tokens);
   }
 }

@@ -33,7 +33,6 @@ class CreateCommand extends SynkCommand {
       "Project Type",
       formatter: (type) => type.name.capitalized,
     );
-
     final displayName = console.prompt("Display Name");
 
     String projectId;
@@ -51,8 +50,7 @@ class CreateCommand extends SynkCommand {
 
       if (_db.contains(projectId)) {
         print(
-          "${c.yellow}!${c.reset} A project with id '$projectId' already exists in the database, please pick something else",
-        );
+            "${c.yellow}!${c.reset} A project with id '$projectId' already exists in the database, please pick something else");
         console.moveCursor(up: 2);
 
         continue;
@@ -62,23 +60,27 @@ class CreateCommand extends SynkCommand {
     }
 
     final gameVersions = console.chooseMultiple(versions, "Minecraft Versions", allowNone: false);
-    final chosenLoaders = console.chooseMultiple(
-      _applyLoaderPreference(loaders
-          .where((element) => element.supportedProjectTypes.contains(type))
-          .map((e) => e.name.capitalized)
-          .toList()),
-      "Loader(s)",
-      allowNone: false,
-    );
 
-    var project = _db[projectId] = Project(type, displayName, projectId, gameVersions, chosenLoaders);
+    final loadersForType =
+        loaders.where((element) => element.supportedProjectTypes.contains(type)).map((e) => e.name).toList();
+    final chosenLoaders = loadersForType.length == 1
+        ? [loadersForType.first]
+        : console.chooseMultiple(
+            _applyLoaderPreference(loadersForType),
+            "Loader(s)",
+            allowNone: false,
+            formatter: (e) => e.capitalized,
+          );
+
+    // TODO collect ids by platform
+    var project = _db[projectId] = Project(type, displayName, projectId, gameVersions, chosenLoaders, {});
     print(project.formatted);
   }
 
   List<String> _applyLoaderPreference(List<String> loaders) {
     loaders.sort();
 
-    for (var (idx, loader) in const ["Fabric", "Quilt", "Forge", "Neoforge"].indexed) {
+    for (var (idx, loader) in const ["fabric", "quilt", "forge", "neoforge"].indexed) {
       if (!loaders.remove(loader)) continue;
       loaders.insert(idx, loader);
     }

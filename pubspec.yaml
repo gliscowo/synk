@@ -15,8 +15,9 @@ dependencies:
   modrinth_api:
     git:
       url: https://github.com/gliscowo/modrinth_api
-      ref: acf10b8
+      ref: c1154c8
   args: ^2.4.2
+  crypto: ^3.0.3
 
 dev_dependencies:
   build_runner: ^2.4.6

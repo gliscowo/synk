@@ -39,7 +39,7 @@ extension SynkConsole on Console {
       {List<T> selected = const [], bool allowNone = true, EntryFormatter<T>? formatter}) {
     writeLine("$inputColor$prompt ${c.reset}❯ ");
 
-    var chosen = MultiChooser(options, 0, allowNone, selected).choose();
+    var chosen = MultiChooser(options, 0, allowNone, selected, formatter: formatter).choose();
     cursorUp();
     writeLine("$inputColor$prompt ${c.reset}❯ ${chosen.map(formatter ?? (e) => e.toString()).join(", ")}");
 

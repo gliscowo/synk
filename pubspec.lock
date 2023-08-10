@@ -162,7 +162,7 @@ packages:
     source: hosted
     version: "1.6.3"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: ff625774173754681d66daaf4a448684fb04b78f902da9cb3d308c19cc5e8bab
@@ -341,8 +341,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: acf10b8
-      resolved-ref: acf10b83c46378676a123d60f6d0a7ee40daa504
+      ref: c1154c8
+      resolved-ref: c1154c839f860894e3e70f393a84758350ca5741
       url: "https://github.com/gliscowo/modrinth_api"
     source: git
     version: "0.1.0"

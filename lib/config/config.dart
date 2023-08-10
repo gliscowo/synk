@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:synk/config/database.dart';
+import 'package:synk/terminal/changelog_reader.dart';
 
 import 'types.dart';
 
@@ -60,10 +61,13 @@ class ConfigProvider {
 }
 
 class SynkConfig {
+  static const _filename = "global_config";
+
   final ConfigProvider _provider;
   ConfigOverlay? _overlay;
 
   List<String>? _defaultMinecraftVersions;
+  ChangelogReader? _changelogReader;
 
   SynkConfig(this._provider) {
     _load();
@@ -76,29 +80,36 @@ class SynkConfig {
     _load();
   }
 
-  List<String> get defaultMinecraftVersions => UnmodifiableListView(_defaultMinecraftVersions ?? const []);
-  set defaultMinecraftVersions(List<String>? versions) {
-    _defaultMinecraftVersions = versions;
+  List<String> get minecraftVersions => UnmodifiableListView(_defaultMinecraftVersions ?? const []);
+  set minecraftVersions(List<String>? value) {
+    _defaultMinecraftVersions = value;
+    _save();
+  }
+
+  ChangelogReader get changelogReader => _changelogReader ?? ChangelogReader.prompt;
+  set changelogReader(ChangelogReader? value) {
+    _changelogReader = value;
     _save();
   }
 
   void _load() {
-    var json = _provider.readConfigData("global_config") ?? ConfigData.defaultValues.toJson();
+    var json = _provider.readConfigData(_filename) ?? ConfigData.defaultValues.toJson();
     if (_overlay != null) {
       json.addAll(_overlay!.overrides);
     }
 
     var data = ConfigData.fromJson(json);
     _defaultMinecraftVersions = data.defaultMinecraftVersions;
+    _changelogReader = data.changelogReader;
   }
 
   void _save() {
-    var json = ConfigData(_defaultMinecraftVersions).toJson();
+    var json = ConfigData(_defaultMinecraftVersions, _changelogReader).toJson();
 
     if (_overlay != null) {
       _overlay?.overrides = json;
     } else {
-      _provider.saveConfigData("global_config", json);
+      _provider.saveConfigData(_filename, json);
     }
   }
 }
@@ -126,10 +137,4 @@ class _ProjectOverlay implements ConfigOverlay {
     _project.configOverlay = value;
     _db[_project.projectId] = _project;
   }
-}
-
-enum ChangelogMode {
-  editor,
-  prompt,
-  file,
 }

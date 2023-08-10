@@ -22,16 +22,16 @@ class OverlayCommand extends SynkCommand {
       _config.overlay = ConfigOverlay.ofProject(_db, _db[overlayProject]!);
     }
 
-    print("Current values: ${_config.defaultMinecraftVersions}");
+    print("Current values: ${_config.minecraftVersions}");
 
     var newValue = console.chooseMultiple(
       List.generate(16, (idx) => (idx + 1).toString()),
       "New values",
-      selected: _config.defaultMinecraftVersions,
+      selected: _config.minecraftVersions,
     );
-    _config.defaultMinecraftVersions = newValue.isNotEmpty ? newValue : null;
+    _config.minecraftVersions = newValue.isNotEmpty ? newValue : null;
 
     _config.overlay = null;
-    print("Values without overlay: ${_config.defaultMinecraftVersions}");
+    print("Values without overlay: ${_config.minecraftVersions}");
   }
 }

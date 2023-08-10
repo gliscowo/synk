@@ -24,7 +24,7 @@ class ProjectDatabase {
       _cache[id] = project;
       _provider.saveConfigData(id, project.toJson(), path: _projectPath);
     } else {
-      if (!index.any((element) => element.projectId == id)) return;
+      if (!contains(id)) return;
 
       _cache[id] == null;
       _provider.deleteConfigData(id, path: _projectPath);
