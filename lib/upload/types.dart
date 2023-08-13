@@ -39,7 +39,9 @@ class UploadRequest {
     this.compatibleGameVersions,
     this.relations,
     this.files,
-  );
+  ) {
+    if (files.isEmpty) throw ArgumentError("At least on file must be provided", "files");
+  }
 
   factory UploadRequest.fromJson(Map<String, dynamic> json) => _$UploadRequestFromJson(json);
   Map<String, dynamic> toJson() => _$UploadRequestToJson(this);
