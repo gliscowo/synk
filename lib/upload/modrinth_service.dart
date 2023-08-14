@@ -12,6 +12,9 @@ class ModrinthUploadService implements UploadService {
   @override
   final String id = "modrinth";
 
+  @override
+  final String name = "Modrinth";
+
   final ModrinthApi _mr;
   final TokenStore _tokens;
   final SynkConfig _config;
@@ -26,8 +29,8 @@ class ModrinthUploadService implements UploadService {
 
   @override
   Future<String?> testAuth() async {
-    if (await _mr.users.getAuthorizedUser() != null) return null;
-    return _tokens[id] == null ? "Missing token" : "Invalid token";
+    if (_tokens[id] == null) return "Missing token";
+    return await _mr.users.getAuthorizedUser() == null ? null : "Invalid token";
   }
 
   @override

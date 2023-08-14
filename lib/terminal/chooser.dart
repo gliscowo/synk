@@ -5,7 +5,7 @@ import 'package:dart_console/dart_console.dart';
 import 'ansi.dart' as c;
 import 'console.dart';
 
-typedef EntryFormatter<T> = String Function(T);
+typedef EntryFormatter<T> = String Function(T entry);
 
 abstract class _Chooser<T, R> {
   final List<T> _options;

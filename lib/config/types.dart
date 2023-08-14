@@ -12,7 +12,6 @@ class Project {
   String displayName;
   String projectId;
   String? changelogFilePath;
-  final List<String> minecraftVersions;
   final List<String> loaders;
   final Map<String, String> idByService;
 
@@ -23,7 +22,6 @@ class Project {
     this.displayName,
     this.projectId,
     this.changelogFilePath,
-    this.minecraftVersions,
     this.loaders,
     this.idByService,
     this.configOverlay,
@@ -33,7 +31,6 @@ class Project {
     this.type,
     this.displayName,
     this.projectId,
-    this.minecraftVersions,
     this.loaders,
     this.idByService, {
     this.changelogFilePath,
@@ -44,7 +41,6 @@ class Project {
         ..insertRows([
           ["Project ID", projectId],
           [],
-          ["Minecraft Versions", minecraftVersions.join(", ")],
           ["Loaders", loaders.join(", ")]
         ]))
       .render();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:args/args.dart';
 import 'package:synk/config/tokens.dart';
 import 'package:synk/terminal/console.dart';
+import 'package:synk/upload/upload_service.dart';
 
 import 'synk_command.dart';
 
@@ -15,14 +16,14 @@ class SetupCommand extends SynkCommand {
         );
 
   @override
-  FutureOr<void> execute(ArgResults args) {
-    final platformChoices = ["Modrinth", "GitHub", "CurseForge"];
+  FutureOr<void> execute(ArgResults args) async {
+    final services = [...UploadService.registered];
     do {
-      var platform = console.choose(platformChoices, "Select platform");
-      platformChoices.remove(platform);
+      var service = console.choose(services, "Select platform", formatter: (entry) => entry.name);
+      services.remove(service);
 
       var token = console.prompt("Token (leave blank to remove)", secret: true);
-      _tokens[platform.toLowerCase()] = token.isNotEmpty ? token : null;
-    } while (platformChoices.isNotEmpty && console.ask("Add more"));
+      _tokens[service.id] = token.isNotEmpty ? token : null;
+    } while (services.isNotEmpty && console.ask("Add more"));
   }
 }

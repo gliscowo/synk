@@ -6,7 +6,7 @@ import 'package:modrinth_api/modrinth_api.dart';
 import 'package:synk/command/create_command.dart';
 import 'package:synk/command/delete_command.dart';
 import 'package:synk/command/index_command.dart';
-import 'package:synk/command/overlay_command.dart';
+import 'package:synk/command/pre_flight_command.dart';
 import 'package:synk/command/setup_command.dart';
 import 'package:synk/config/config.dart';
 import 'package:synk/config/database.dart';
@@ -30,11 +30,11 @@ void main(List<String> arguments) async {
   UploadService.register(CurseForgeUploadService(client, tokens));
 
   final runner = CommandRunner<void>("synk", "monochrome to colors")
-    ..addCommand(CreateCommand(db, mr))
+    ..addCommand(CreateCommand(db, mr, config))
     ..addCommand(DeleteCommand(db))
     ..addCommand(IndexCommand(db))
     ..addCommand(SetupCommand(tokens))
-    ..addCommand(OverlayCommand(config, db));
+    ..addCommand(PreFlightCommand(config, db));
 
   try {
     await runner.run(arguments);

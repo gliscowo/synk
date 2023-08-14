@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:args/args.dart';
 import 'package:modrinth_api/modrinth_api.dart';
+import 'package:synk/config/config.dart';
+import 'package:synk/terminal/changelog_reader.dart';
+import 'package:synk/upload/upload_service.dart';
 
 import '../config/database.dart';
 import '../config/types.dart';
-import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
 import 'synk_command.dart';
@@ -13,8 +15,9 @@ import 'synk_command.dart';
 class CreateCommand extends SynkCommand {
   final ProjectDatabase _db;
   final ModrinthApi _mr;
+  final SynkConfig _config;
 
-  CreateCommand(this._db, this._mr)
+  CreateCommand(this._db, this._mr, this._config)
       : super(
           "create",
           "Create a new project and store it in the database",
@@ -35,36 +38,32 @@ class CreateCommand extends SynkCommand {
     );
     final displayName = console.prompt("Display Name");
 
-    String projectId;
-    while (true) {
-      projectId = console.prompt(
-        "Project ID",
-        defaultAnswer: displayName
-            .toLowerCase()
-            .runes
-            .where((codeUnit) => codeUnit < 256)
-            .map(String.fromCharCode)
-            .join()
-            .replaceAll(" ", "-"),
-      );
+    final projectId = console.promptValidated(
+      "Project ID",
+      (input) {
+        if (!RegExp("[a-z-_]").hasMatch(input)) {
+          return "$input is not a valid project ID, which must only contain lowercase ASCII, hyphens and underscores";
+        }
 
-      if (_db.contains(projectId)) {
-        print(
-            "${c.yellow}!${c.reset} A project with id '$projectId' already exists in the database, please pick something else");
-        console.moveCursor(up: 2);
+        if (_db.contains(input)) {
+          return "A project with id '$input' already exists in the database, please pick something else";
+        }
 
-        continue;
-      }
-
-      break;
-    }
-
-    final gameVersions = console.chooseMultiple(versions, "Minecraft Versions", allowNone: false);
+        return null;
+      },
+      defaultAnswer: displayName
+          .toLowerCase()
+          .runes
+          .where((codeUnit) => codeUnit < 256)
+          .map(String.fromCharCode)
+          .join()
+          .replaceAll(" ", "-"),
+    );
 
     final loadersForType =
         loaders.where((element) => element.supportedProjectTypes.contains(type)).map((e) => e.name).toList();
     final chosenLoaders = loadersForType.length == 1
-        ? [loadersForType.first]
+        ? [loadersForType.single]
         : console.chooseMultiple(
             _applyLoaderPreference(loadersForType),
             "Loader(s)",
@@ -72,8 +71,47 @@ class CreateCommand extends SynkCommand {
             formatter: (e) => e.capitalized,
           );
 
-    // TODO collect ids by platform
-    var project = _db[projectId] = Project(type, displayName, projectId, gameVersions, chosenLoaders, {});
+    final idByService = <String, String>{};
+    if (console.ask("Set up platform-specific project IDs now", ephemeral: true)) {
+      final services = [...UploadService.registered];
+      while (services.isNotEmpty) {
+        final service = services.length == 1
+            ? services.single
+            : console.choose(
+                services,
+                "Choose platform",
+                formatter: (entry) => entry.name,
+                ephemeral: true,
+              );
+
+        idByService[service.id] = await console.promptValidatedAsync(
+          "${service.name} project ID",
+          (input) async => !await Spinner.wait("Validating...", service.isProject(input))
+              ? "No project with ID '$input' was found"
+              : null,
+          allowOverride: true,
+        );
+
+        services.remove(service);
+        if (services.isNotEmpty && !console.ask("Add more", ephemeral: true)) break;
+      }
+    }
+
+    final project = _db[projectId] = Project(type, displayName, projectId, chosenLoaders, idByService);
+    _config.overlay = ConfigOverlay.ofProject(_db, project);
+
+    if (console.ask("Use project-specific Minecraft versions", ephemeral: true)) {
+      _config.minecraftVersions = console.chooseMultiple(versions, "Minecraft Versions", allowNone: false);
+    }
+
+    if (console.ask("Use project-specific changelog mode", ephemeral: true)) {
+      _config.changelogReader = console.choose<ChangelogReader>(
+        ChangelogReader.values,
+        "Changelog Mode",
+        formatter: (entry) => entry.name,
+      );
+    }
+
     print(project.formatted);
   }
 

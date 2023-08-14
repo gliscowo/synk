@@ -21,6 +21,9 @@ class CurseForgeUploadService implements UploadService {
   @override
   final String id = "curseforge";
 
+  @override
+  final String name = "CurseForge";
+
   final Client _client;
   final TokenStore _tokens;
 
@@ -35,9 +38,13 @@ class CurseForgeUploadService implements UploadService {
   bool supportsProjectType(ModrinthProjectType type) => true;
 
   @override
-  Future<String?> testAuth() => _client
-      .get(Uri.parse("$_baseUrl/game/versions"), headers: _headers)
-      .then((value) => value.statusCode == 200 ? null : jsonDecode(value.body)["errorMessage"] as String);
+  Future<String?> testAuth() async {
+    if (_tokens[id] == null) return "Missing token";
+
+    return _client
+        .get(Uri.parse("$_baseUrl/game/versions"), headers: _headers)
+        .then((value) => value.statusCode == 200 ? null : jsonDecode(value.body)["errorMessage"] as String);
+  }
 
   @override
   Future<Uri> upload(Project project, UploadRequest request) async {

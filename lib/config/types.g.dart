@@ -11,9 +11,6 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => Project._json(
       json['display_name'] as String,
       json['project_id'] as String,
       json['changelog_file_path'] as String?,
-      (json['minecraft_versions'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
       (json['loaders'] as List<dynamic>).map((e) => e as String).toList(),
       Map<String, String>.from(json['id_by_service'] as Map),
       json['config_overlay'] as Map<String, dynamic>,
@@ -24,7 +21,6 @@ Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
       'display_name': instance.displayName,
       'project_id': instance.projectId,
       'changelog_file_path': instance.changelogFilePath,
-      'minecraft_versions': instance.minecraftVersions,
       'loaders': instance.loaders,
       'id_by_service': instance.idByService,
       'config_overlay': instance.configOverlay,

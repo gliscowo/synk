@@ -17,7 +17,7 @@ void main() {
     });
 
     test('store and load', () {
-      db["affinity"] = Project(ModrinthProjectType.mod, "Affinity", "affinity", ["1.20"], ["fabric"], {});
+      db["affinity"] = Project(ModrinthProjectType.mod, "Affinity", "affinity", ["fabric"], {});
       config.minecraftVersions = ["1.18"];
 
       config = SynkConfig(provider);

@@ -29,6 +29,9 @@ abstract interface class UploadService {
   /// A `[a-z-_]` string to uniquely identify this service
   String get id;
 
+  /// A user-friendly string used to identify this service
+  String get name;
+
   /// Perform an upload for [project] as specified by [request]
   /// and return the URL of the resulting release
   ///
