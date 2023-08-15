@@ -5,7 +5,6 @@ import 'package:dart_console/dart_console.dart';
 import 'package:synk/command/synk_command.dart';
 import 'package:synk/config/config.dart';
 import 'package:synk/config/database.dart';
-import 'package:synk/terminal/console.dart';
 
 import '../terminal/ansi.dart' as c;
 import '../terminal/spinner.dart';
@@ -22,37 +21,30 @@ class PreFlightCommand extends SynkCommand {
 
   @override
   Future<FutureOr<void>> execute(ArgResults args) async {
-    final results = <String, String>{};
+    final tokenTable = Table()..title = "Tokens";
 
     for (final service in UploadService.registered) {
       final result = await Spinner.wait("Pinging ${service.name}", service.testAuth());
       if (result == null) {
-        results[service.id] = "${c.green}✓${c.reset}";
+        tokenTable.insertRow([service.name, (c.green("✓"))]);
       } else {
-        results[service.id] = "${c.red}⚠  $result${c.reset}";
+        tokenTable.insertRow([service.name, c.red("⚠  $result")]);
       }
     }
 
-    print(
-      Table()
-        ..title = "Tokens"
-        ..insertRows(results.entries.map((e) => [e.key, e.value.truncate(50)]).toList())
-        ..render(),
-    );
+    print(tokenTable.render());
 
     if (_config.minecraftVersions.isNotEmpty) {
-      print("${c.green}✓${c.reset} Default Minecraft versions: ${_config.minecraftVersions.join(", ")}");
+      print("${c.green("✓")} Default Minecraft versions: ${_config.minecraftVersions.join(", ")}");
     } else {
-      print("${c.yellow}!${c.reset} You do have any default Minecraft versions configured");
+      print("${c.yellow("!")} You do have any default Minecraft versions configured");
     }
 
     final index = _db.index;
     if (index.isNotEmpty) {
-      print(
-          "${c.green}✓${c.reset} ${index.length} projects in database: ${index.map((e) => e.displayName).join(", ")}");
+      print("${c.green("✓")} ${index.length} projects in database: ${index.map((e) => e.displayName).join(", ")}");
     } else {
-      print(
-          "${c.yellow}!${c.reset} You don't currently have any projects in the databse. Run 'synk create' to get started");
+      print("${c.yellow("!")} You don't currently have any projects in the databse. Run 'synk create' to get started");
     }
   }
 }

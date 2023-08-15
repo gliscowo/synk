@@ -29,6 +29,8 @@ final class AnsiControlSequence {
 
   void write() => console.write(code);
 
+  String call(String text) => "$code$text$reset";
+
   @override
   String toString() => code;
 }

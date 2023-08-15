@@ -14,6 +14,7 @@ import 'package:synk/config/tokens.dart';
 import 'package:synk/terminal/ansi.dart' as c;
 import 'package:synk/terminal/console.dart';
 import 'package:synk/upload/curseforge_service.dart';
+import 'package:synk/upload/github_service.dart';
 import 'package:synk/upload/modrinth_service.dart';
 import 'package:synk/upload/upload_service.dart';
 
@@ -28,6 +29,7 @@ void main(List<String> arguments) async {
   final mr = ModrinthApi.createClient("gliscowo/synk", token: tokens["modrinth"]);
   UploadService.register(ModrinthUploadService(mr, tokens, config));
   UploadService.register(CurseForgeUploadService(client, tokens));
+  UploadService.register(GitHubUploadService(tokens, client));
 
   final runner = CommandRunner<void>("synk", "monochrome to colors")
     ..addCommand(CreateCommand(db, mr, config))
@@ -39,7 +41,7 @@ void main(List<String> arguments) async {
   try {
     await runner.run(arguments);
   } on UsageException catch (e) {
-    print("${c.red}${e.message}${c.reset}");
+    print(c.red(e.message));
   } on SynkOut catch (synkOut) {
     exitCode = synkOut.code;
   } finally {

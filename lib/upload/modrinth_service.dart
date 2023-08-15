@@ -30,7 +30,7 @@ class ModrinthUploadService implements UploadService {
   @override
   Future<String?> testAuth() async {
     if (_tokens[id] == null) return "Missing token";
-    return await _mr.users.getAuthorizedUser() == null ? null : "Invalid token";
+    return await _mr.users.getAuthorizedUser() != null ? null : "Invalid token";
   }
 
   @override

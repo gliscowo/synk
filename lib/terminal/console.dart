@@ -114,7 +114,7 @@ extension SynkConsole on Console {
     String? validatorResult;
     while ((validatorResult = validator(input)) != null) {
       print("${c.yellow}!${c.reset} $validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}");
-      console.moveCursor(up: 2);
+      moveCursor(up: 2);
 
       if (allowOverride) {
         final newInput = doPrompt(prompt, input);
@@ -122,12 +122,12 @@ extension SynkConsole on Console {
 
         input = newInput;
       } else {
-        console.eraseLine();
+        eraseLine();
         input = doPrompt(prompt, defaultAnswer);
       }
     }
 
-    console.eraseLine();
+    eraseLine();
     if (ephemeral) undoLine();
 
     return input;
@@ -154,7 +154,7 @@ extension SynkConsole on Console {
     String? validatorResult;
     while ((validatorResult = await validator(input)) != null) {
       print("${c.yellow}!${c.reset} $validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}");
-      console.moveCursor(up: 2);
+      moveCursor(up: 2);
 
       if (allowOverride) {
         final newInput = doPrompt(prompt, input);
@@ -162,12 +162,12 @@ extension SynkConsole on Console {
 
         input = newInput;
       } else {
-        console.eraseLine();
+        eraseLine();
         input = doPrompt(prompt, defaultAnswer);
       }
     }
 
-    console.eraseLine();
+    eraseLine();
     if (ephemeral) undoLine();
 
     return input;
