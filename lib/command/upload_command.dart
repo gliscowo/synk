@@ -6,6 +6,7 @@ import 'package:archive/archive.dart';
 import 'package:args/args.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:synk/config/types.dart';
 import 'package:toml/toml.dart';
 
@@ -51,6 +52,7 @@ class UploadCommand extends SynkCommand {
       return;
     }
 
+    String version;
     List<File> files;
     if (args.rest.length < 2 && project.primaryFilePattern == null) {
       print(c.error(
@@ -58,7 +60,7 @@ class UploadCommand extends SynkCommand {
       ));
       print(c.hint("You can run 'synk edit ${project.projectId}' to add one"));
       return;
-    } else if (args.rest.length > 2) {
+    } else if (args.rest.length >= 2) {
       files = args.rest.skip(1).map((e) => File(e)).toList();
       for (var file in files) {
         if (file.existsSync()) continue;
@@ -66,17 +68,32 @@ class UploadCommand extends SynkCommand {
         print(c.error("Could find file ${file.path}"));
         return;
       }
+
+      version = askUserIfVersionUnknown(basename(files.first.path), await tryReadVersion(project, files.first));
     } else {
       files = project.findPrimaryFiles()!.where((element) => !element.path.contains("sources")).toList();
-      final versions = (await Future.wait(files.map((e) => tryExtractVersion(project, e)))).toList();
+      final versions = (await Future.wait(files.map((e) => tryReadVersion(project, e).then((v) => (e, v))))).map((e) {
+        var version = Version.none;
+        if (e.$2 != null) {
+          try {
+            version = Version.parse(e.$2!);
+          } on FormatException catch (_) {}
+        }
+
+        return (e.$1, e.$2, version);
+      }).toList();
 
       final chosen = console.choose(
-        files,
+        versions..sort((a, b) => -a.$3.compareTo(b.$3)),
         "Choose version",
-        formatter: (entry) => versions[files.indexOf(entry)] ?? basename(entry.path),
+        formatter: (entry) => entry.$2 != null
+            ? "${entry.$2?.padRight(30)} ${c.brightBlack("(${basename(entry.$1.path)})")}"
+            : basename(entry.$1.path),
+        resultFormatter: (entry) => entry.$2 ?? basename(entry.$1.path),
       );
 
-      files.addAll(project.resolveSecondaryFiles(chosen));
+      files.addAll(project.resolveSecondaryFiles(chosen.$1));
+      version = askUserIfVersionUnknown(basename(chosen.$1.path), chosen.$2);
     }
 
     _config.overlay = ConfigOverlay.ofProject(_db, project);
@@ -104,48 +121,65 @@ class UploadCommand extends SynkCommand {
 
   @override
   String get invocation => "${super.invocation} [<file(s)>]";
-}
 
-Future<String?> tryExtractVersion(Project project, File file) async {
-  Archive archive;
-  try {
-    archive = ZipDecoder().decodeBytes(await file.readAsBytes());
-  } catch (_) {
+  /// Try to read the version of the given artifact according to the
+  /// metadata formats prescribed by different loaders / modpack formats
+  ///
+  /// Currently supported are:
+  ///  - Forge mods
+  ///  - Fabric mods
+  ///  - Quilt mods
+  ///  - .mrpack modpacks
+  Future<String?> tryReadVersion(Project project, File file) async {
+    Archive archive;
+    try {
+      archive = ZipDecoder().decodeBytes(await file.readAsBytes());
+    } catch (_) {
+      return null;
+    }
+
+    final ext = extension(file.path);
+    if (project.type == ModrinthProjectType.mod && ext == ".jar") {
+      final fmj = archive.findFile("fabric.mod.json");
+      if (fmj != null && (project.loaders.contains("fabric") || project.loaders.contains("quilt"))) {
+        if (jsonDecode(fmj.contentString) case {"version": String version}) {
+          return version;
+        }
+      }
+
+      final qmj = archive.findFile("quilt.mod.json");
+      if (qmj != null && project.loaders.contains("quilt")) {
+        if (jsonDecode(qmj.contentString) case {"quilt_loader": {"version": String version}}) {
+          return version;
+        }
+      }
+
+      final modsToml = archive.findFile("META-INF/mods.toml");
+      if (modsToml != null && (project.loaders.contains("forge") || project.loaders.contains("neoforge"))) {
+        if (TomlDocument.parse(modsToml.contentString).toMap() case {"mods": [{"version": String version}, ...]}) {
+          return version;
+        }
+      }
+    } else if (project.type == ModrinthProjectType.modpack && ext == ".mrpack") {
+      final index = archive.findFile("modrinth.index.json");
+      if (index != null) {
+        if (jsonDecode(index.contentString) case {"versionId": String version}) {
+          return version;
+        }
+      }
+    }
+
     return null;
   }
 
-  final ext = extension(file.path);
-  if (project.type == ModrinthProjectType.mod && ext == ".jar") {
-    final fmj = archive.findFile("fabric.mod.json");
-    if (fmj != null && (project.loaders.contains("fabric") || project.loaders.contains("quilt"))) {
-      if (jsonDecode(fmj.contentString) case {"version": String version}) {
-        return version;
-      }
-    }
-
-    final qmj = archive.findFile("quilt.mod.json");
-    if (qmj != null && project.loaders.contains("quilt")) {
-      if (jsonDecode(qmj.contentString) case {"quilt_loader": {"version": String version}}) {
-        return version;
-      }
-    }
-
-    final modsToml = archive.findFile("META-INF/mods.toml");
-    if (modsToml != null && (project.loaders.contains("forge") || project.loaders.contains("neoforge"))) {
-      if (TomlDocument.parse(modsToml.contentString).toMap() case {"mods": [{"version": String version}, ...]}) {
-        return version;
-      }
-    }
-  } else if (project.type == ModrinthProjectType.modpack && ext == ".mrpack") {
-    final index = archive.findFile("modrinth.index.json");
-    if (index != null) {
-      if (jsonDecode(index.contentString) case {"versionId": String version}) {
-        return version;
-      }
+  String askUserIfVersionUnknown(String filename, String? maybeVersion) {
+    if (maybeVersion == null) {
+      print(c.warning("The version of file '$filename' could not be determined"));
+      return console.prompt("Enter version");
+    } else {
+      return maybeVersion;
     }
   }
-
-  return null;
 }
 
 extension on ArchiveFile {

@@ -21,13 +21,24 @@ extension SynkConsole on Console {
   ///
   /// Entries are formatted by invoking [formatter]
   /// and [selected] can override which entry the picker starts on
-  T choose<T>(List<T> options, String prompt,
-      {int selected = 0, bool ephemeral = false, EntryFormatter<T>? formatter}) {
+  ///
+  /// If a [resultFormatter] is provided, it is used to format
+  /// the value displayed to the user after they have made their
+  /// choice. If no value is provided, this defaults to [formatter]
+  T choose<T>(
+    List<T> options,
+    String prompt, {
+    int selected = 0,
+    bool ephemeral = false,
+    EntryFormatter<T>? formatter,
+    EntryFormatter<T>? resultFormatter,
+  }) {
+    resultFormatter ??= formatter;
     writeLine("$inputColor$prompt ${c.reset}❯ ");
 
     var chosen = Chooser(options, selected, formatter: formatter).choose();
     cursorUp();
-    writeLine("$inputColor$prompt ${c.reset}❯ ${(formatter ?? (e) => e.toString())(chosen)}");
+    writeLine("$inputColor$prompt ${c.reset}❯ ${(resultFormatter ?? (e) => e.toString())(chosen)}");
 
     if (ephemeral) undoLine();
     return chosen;
@@ -37,13 +48,25 @@ extension SynkConsole on Console {
   ///
   /// Entries are formatted by invoking [formatter]
   /// and [selected] can provide a set of entries to pre-select
-  List<T> chooseMultiple<T>(List<T> options, String prompt,
-      {List<T> selected = const [], bool allowNone = true, bool ephemeral = false, EntryFormatter<T>? formatter}) {
+  ///
+  /// If a [resultFormatter] is provided, it is used to format
+  /// the value displayed to the user after they have made their
+  /// choice. If no value is provided, this defaults to [formatter]
+  List<T> chooseMultiple<T>(
+    List<T> options,
+    String prompt, {
+    List<T> selected = const [],
+    bool allowNone = true,
+    bool ephemeral = false,
+    EntryFormatter<T>? formatter,
+    EntryFormatter<T>? resultFormatter,
+  }) {
+    resultFormatter ??= formatter;
     writeLine("$inputColor$prompt ${c.reset}❯ ");
 
     var chosen = MultiChooser(options, 0, allowNone, selected, formatter: formatter).choose();
     cursorUp();
-    writeLine("$inputColor$prompt ${c.reset}❯ ${chosen.map(formatter ?? (e) => e.toString()).join(", ")}");
+    writeLine("$inputColor$prompt ${c.reset}❯ ${chosen.map(resultFormatter ?? (e) => e.toString()).join(", ")}");
 
     if (ephemeral) undoLine();
     return chosen;
