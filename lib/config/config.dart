@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:synk/config/database.dart';
-import 'package:synk/terminal/changelog_reader.dart';
 
+import '../terminal/changelog_reader.dart';
+import 'database.dart';
 import 'types.dart';
 
 const _jsonEncoder = JsonEncoder.withIndent("  ");
@@ -119,7 +119,7 @@ abstract interface class ConfigOverlay {
   set overrides(Map<String, dynamic> value);
 
   /// Create a config overlay which uses [project.configOverlay]
-  /// as the override provider and persists [project] to [database]
+  /// as the override provider and writes [project] to [database]
   /// when the overrides are updated
   factory ConfigOverlay.ofProject(ProjectDatabase database, Project project) => _ProjectOverlay(database, project);
 }

@@ -19,7 +19,7 @@ abstract class SynkCommand extends Command<void> {
   FutureOr<void> run() {
     if (argResults!.rest.length < _arguments.length) {
       final missing = _arguments.sublist(argResults!.rest.length).map((e) => "<$e>");
-      print("${c.red}Missing ${missing.length == 1 ? "argument" : "arguments"}: ${missing.join(" ")}${c.reset}");
+      print(c.error("Missing ${missing.length == 1 ? "argument" : "arguments"}: ${missing.join(" ")}"));
 
       printUsage();
       return null;

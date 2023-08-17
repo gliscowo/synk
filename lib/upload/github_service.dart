@@ -2,10 +2,10 @@ import 'package:github/github.dart';
 import 'package:http/http.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
-import 'package:synk/terminal/console.dart';
 
 import '../config/tokens.dart';
 import '../config/types.dart';
+import '../terminal/console.dart';
 import 'types.dart';
 import 'upload_service.dart';
 

@@ -40,7 +40,7 @@ enum ChangelogReader {
         // crazy!
         // i was crazy once
         await Process.start(
-          String.fromEnvironment("EDITOR", defaultValue: Platform.isWindows ? "notepad" : "vi"),
+          Platform.environment["EDITOR"] ?? (Platform.isWindows ? "notepad" : "vi"),
           [_changelogFilename],
           mode: ProcessStartMode.inheritStdio,
         ).then((process) => process.exitCode);

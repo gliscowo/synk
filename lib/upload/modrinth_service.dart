@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
-import 'package:synk/config/config.dart';
-import 'package:synk/config/tokens.dart';
-import 'package:synk/config/types.dart';
-import 'package:synk/upload/types.dart';
-import 'package:synk/upload/upload_service.dart';
+
+import '../config/tokens.dart';
+import '../config/types.dart';
+import 'types.dart';
+import 'upload_service.dart';
 
 class ModrinthUploadService implements UploadService {
   @override
@@ -17,9 +17,8 @@ class ModrinthUploadService implements UploadService {
 
   final ModrinthApi _mr;
   final TokenStore _tokens;
-  final SynkConfig _config;
 
-  ModrinthUploadService(this._mr, this._tokens, this._config);
+  ModrinthUploadService(this._mr, this._tokens);
 
   @override
   Future<bool> isProject(String projectId) async => await _mr.projects.get(projectId) != null;
@@ -45,7 +44,7 @@ class ModrinthUploadService implements UploadService {
               .where((e) => e.projectIdByPlatform.containsKey(id))
               .map((e) => CreateDependency(e.projectIdByPlatform[id]!, e.type))
               .toList(),
-          _config.minecraftVersions,
+          request.compatibleGameVersions,
           request.releaseType.toModrinth(),
           project.loaders,
           false,

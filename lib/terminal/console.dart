@@ -113,7 +113,7 @@ extension SynkConsole on Console {
 
     String? validatorResult;
     while ((validatorResult = validator(input)) != null) {
-      print("${c.yellow}!${c.reset} $validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}");
+      print(c.warning("$validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}"));
       moveCursor(up: 2);
 
       if (allowOverride) {
@@ -153,7 +153,7 @@ extension SynkConsole on Console {
 
     String? validatorResult;
     while ((validatorResult = await validator(input)) != null) {
-      print("${c.yellow}!${c.reset} $validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}");
+      print(c.warning("$validatorResult${allowOverride ? ". Press enter again to use it anyways" : ""}"));
       moveCursor(up: 2);
 
       if (allowOverride) {

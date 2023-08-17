@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:args/args.dart';
 import 'package:modrinth_api/modrinth_api.dart';
-import 'package:synk/config/config.dart';
-import 'package:synk/terminal/changelog_reader.dart';
-import 'package:synk/upload/upload_service.dart';
 
+import '../config/config.dart';
 import '../config/database.dart';
 import '../config/types.dart';
+import '../terminal/changelog_reader.dart';
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
+import '../upload/upload_service.dart';
 import 'synk_command.dart';
 
 class CreateCommand extends SynkCommand {
@@ -97,7 +97,17 @@ class CreateCommand extends SynkCommand {
       }
     }
 
-    final project = _db[projectId] = Project(type, displayName, projectId, chosenLoaders, idByService);
+    final project = _db[projectId] = Project(
+      type,
+      displayName,
+      projectId,
+      chosenLoaders,
+      /* TODO relations */ [],
+      idByService,
+      null,
+      null,
+      {},
+    );
     _config.overlay = ConfigOverlay.ofProject(_db, project);
 
     if (console.ask("Use project-specific Minecraft versions", ephemeral: true)) {

@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:args/args.dart';
-import 'package:synk/config/tokens.dart';
-import 'package:synk/terminal/console.dart';
-import 'package:synk/upload/upload_service.dart';
 
+import '../config/tokens.dart';
+import '../terminal/console.dart';
+import '../upload/upload_service.dart';
 import 'synk_command.dart';
 
 class SetupCommand extends SynkCommand {

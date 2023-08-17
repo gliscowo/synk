@@ -8,6 +8,7 @@ import 'package:synk/command/delete_command.dart';
 import 'package:synk/command/index_command.dart';
 import 'package:synk/command/pre_flight_command.dart';
 import 'package:synk/command/setup_command.dart';
+import 'package:synk/command/upload_command.dart';
 import 'package:synk/config/config.dart';
 import 'package:synk/config/database.dart';
 import 'package:synk/config/tokens.dart';
@@ -27,7 +28,7 @@ void main(List<String> arguments) async {
   final config = SynkConfig(configProvider);
 
   final mr = ModrinthApi.createClient("gliscowo/synk", token: tokens["modrinth"]);
-  UploadService.register(ModrinthUploadService(mr, tokens, config));
+  UploadService.register(ModrinthUploadService(mr, tokens));
   UploadService.register(CurseForgeUploadService(client, tokens));
   UploadService.register(GitHubUploadService(tokens, client));
 
@@ -36,7 +37,8 @@ void main(List<String> arguments) async {
     ..addCommand(DeleteCommand(db))
     ..addCommand(IndexCommand(db))
     ..addCommand(SetupCommand(tokens))
-    ..addCommand(PreFlightCommand(config, db));
+    ..addCommand(PreFlightCommand(config, db))
+    ..addCommand(UploadCommand(config, db, mr));
 
   try {
     await runner.run(arguments);

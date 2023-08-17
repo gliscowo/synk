@@ -1,4 +1,4 @@
-import 'console.dart';
+import 'dart:io';
 
 const ansiEscape = "\x1b[";
 
@@ -24,13 +24,18 @@ const bold = AnsiControlSequence("1m");
 const reset = AnsiControlSequence("0m");
 
 final class AnsiControlSequence {
+  static final _enabled = !Platform.environment.containsKey("NO_COLOR");
+
   final String code;
   const AnsiControlSequence(String color) : code = "$ansiEscape$color";
 
-  void write() => console.write(code);
-
-  String call(String text) => "$code$text$reset";
+  String call(String text) => "$this$text$reset";
 
   @override
-  String toString() => code;
+  String toString() => _enabled ? code : "";
 }
+
+String warning(String message) => "${yellow("!")} $message";
+String error(String message) => "${red("!")} $message";
+String success(String message) => "${green("✓")} $message";
+String hint(String message) => "${blue("?")} $message";

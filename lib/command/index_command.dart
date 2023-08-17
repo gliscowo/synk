@@ -18,7 +18,7 @@ class IndexCommand extends SynkCommand {
   FutureOr<void> execute(ArgResults args) async {
     final index = _db.index;
     if (index.isEmpty) {
-      print("${c.yellow}The database is currently empty");
+      print(c.warning("The database is currently empty"));
       return;
     }
 

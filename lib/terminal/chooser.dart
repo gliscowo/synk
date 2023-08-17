@@ -89,8 +89,8 @@ abstract class _Chooser<T, R> {
     }
   }
 
-  String _format(T t, int idx, String format) {
-    return format + (_formatter ?? (t) => t.toString())(t);
+  String _format(T t, int idx, String formatting) {
+    return formatting + (_formatter ?? (t) => t.toString())(t);
   }
 }
 
@@ -127,6 +127,6 @@ class MultiChooser<T> extends _Chooser<T, List<T>> {
   List<T>? get _result => _allowNone || _selected.isNotEmpty ? _selected : null;
 
   @override
-  String _format(T t, int idx, String format) =>
-      (_selected.contains(_options[idx]) ? "${c.green}✓ " : "${c.red}✗ ") + super._format(t, idx, format);
+  String _format(T t, int idx, String formatting) =>
+      (_selected.contains(_options[idx]) ? "${c.green}✓ " : "${c.red}✗ ") + super._format(t, idx, formatting);
 }

@@ -10,19 +10,26 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => Project._json(
       $enumDecode(_$ModrinthProjectTypeEnumMap, json['type']),
       json['display_name'] as String,
       json['project_id'] as String,
-      json['changelog_file_path'] as String?,
       (json['loaders'] as List<dynamic>).map((e) => e as String).toList(),
+      (json['relations'] as List<dynamic>)
+          .map((e) => Relation.fromJson(e as Map<String, dynamic>))
+          .toList(),
       Map<String, String>.from(json['id_by_service'] as Map),
+      json['changelog_file_path'] as String?,
       json['config_overlay'] as Map<String, dynamic>,
-    );
+      Map<String, String>.from(json['secondary_file_patterns'] as Map),
+    )..primaryFilePattern = json['primary_file_pattern'] as String?;
 
 Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
       'type': _$ModrinthProjectTypeEnumMap[instance.type]!,
       'display_name': instance.displayName,
       'project_id': instance.projectId,
-      'changelog_file_path': instance.changelogFilePath,
       'loaders': instance.loaders,
+      'relations': instance.relations,
       'id_by_service': instance.idByService,
+      'changelog_file_path': instance.changelogFilePath,
+      'primary_file_pattern': instance.primaryFilePattern,
+      'secondary_file_patterns': instance.secondaryFilePatterns,
       'config_overlay': instance.configOverlay,
     };
 

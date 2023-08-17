@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:args/args.dart';
-import 'package:synk/config/database.dart';
-import 'package:synk/terminal/console.dart';
 
+import '../config/database.dart';
 import '../terminal/ansi.dart' as c;
+import '../terminal/console.dart';
 import 'synk_command.dart';
 
 class DeleteCommand extends SynkCommand {
@@ -20,15 +20,15 @@ class DeleteCommand extends SynkCommand {
   FutureOr<void> execute(ArgResults args) async {
     final projectId = args.rest.first;
 
-    if (!_db.contains(projectId)) {
-      print("${c.red}No project with id '$projectId' found in database${c.reset}");
+    final project = _db[projectId];
+    if (project == null) {
+      print(c.error("No project with id '$projectId' found in database"));
       return;
     }
 
-    final project = _db[projectId];
-    if (!console.ask("Really delete '${project!.displayName}'")) return;
+    if (!console.ask("Really delete '${project.displayName}'")) return;
 
     _db[projectId] = null;
-    print("Project ${project.displayName} deleted successfully");
+    print(c.success("Project ${project.displayName} deleted successfully"));
   }
 }
