@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dart_console/dart_console.dart';
 import 'package:path/path.dart';
 
 import '../terminal/changelog_reader.dart';
@@ -112,6 +113,14 @@ class SynkConfig {
       _provider.saveConfigData(_filename, json);
     }
   }
+
+  String get formatted => (Table()
+        // ..title = "${type.name.capitalized} - $displayName"
+        ..insertRows([
+          ["Default Minecraft versions", _defaultMinecraftVersions?.join(", ") ?? "none"],
+          ["Default changelog mode", _changelogReader ?? "undefined"],
+        ]))
+      .render();
 }
 
 abstract interface class ConfigOverlay {

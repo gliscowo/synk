@@ -7,11 +7,11 @@ import 'package:args/args.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:synk/config/types.dart';
 import 'package:toml/toml.dart';
 
 import '../config/config.dart';
 import '../config/database.dart';
+import '../config/types.dart';
 import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';

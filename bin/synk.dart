@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:http/http.dart';
 import 'package:modrinth_api/modrinth_api.dart';
+import 'package:synk/command/config_command.dart';
 import 'package:synk/command/create_command.dart';
 import 'package:synk/command/delete_command.dart';
 import 'package:synk/command/index_command.dart';
@@ -36,6 +37,7 @@ void main(List<String> arguments) async {
     ..addCommand(CreateCommand(db, mr, config))
     ..addCommand(DeleteCommand(db))
     ..addCommand(IndexCommand(db))
+    ..addCommand(ConfigCommand(config, mr))
     ..addCommand(SetupCommand(tokens))
     ..addCommand(PreFlightCommand(config, db))
     ..addCommand(UploadCommand(config, db, mr));

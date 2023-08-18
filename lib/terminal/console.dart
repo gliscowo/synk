@@ -24,7 +24,7 @@ extension SynkConsole on Console {
   ///
   /// If a [resultFormatter] is provided, it is used to format
   /// the value displayed to the user after they have made their
-  /// choice. If no value is provided, this defaults to [formatter]
+  /// choice. If nothing is provided, this defaults to [formatter]
   T choose<T>(
     List<T> options,
     String prompt, {
@@ -51,7 +51,7 @@ extension SynkConsole on Console {
   ///
   /// If a [resultFormatter] is provided, it is used to format
   /// the value displayed to the user after they have made their
-  /// choice. If no value is provided, this defaults to [formatter]
+  /// choice. If nothing is provided, this defaults to [formatter]
   List<T> chooseMultiple<T>(
     List<T> options,
     String prompt, {
