@@ -27,7 +27,7 @@ class UploadCommand extends SynkCommand {
       : super(
           "upload",
           "Upload a new set of atifacts for the given project",
-          arguments: ["project-id"],
+          arguments: const ["project-id"],
         ) {
     argParser
       ..addFlag(

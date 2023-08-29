@@ -6,12 +6,14 @@ import 'package:modrinth_api/modrinth_api.dart';
 import 'package:synk/command/config_command.dart';
 import 'package:synk/command/create_command.dart';
 import 'package:synk/command/delete_command.dart';
+import 'package:synk/command/edit_command.dart';
 import 'package:synk/command/index_command.dart';
 import 'package:synk/command/pre_flight_command.dart';
 import 'package:synk/command/setup_command.dart';
 import 'package:synk/command/upload_command.dart';
 import 'package:synk/config/config.dart';
 import 'package:synk/config/database.dart';
+import 'package:synk/config/options.dart';
 import 'package:synk/config/tokens.dart';
 import 'package:synk/terminal/ansi.dart' as c;
 import 'package:synk/terminal/console.dart';
@@ -33,11 +35,15 @@ void main(List<String> arguments) async {
   UploadService.register(CurseForgeUploadService(client, tokens));
   UploadService.register(GitHubUploadService(tokens, client));
 
+  final configOptions = createConfigOptions(mr);
+  final projectOptions = createProjectOptions(mr);
+
   final runner = CommandRunner<void>("synk", "monochrome to colors")
     ..addCommand(CreateCommand(db, mr, config))
     ..addCommand(DeleteCommand(db))
     ..addCommand(IndexCommand(db))
-    ..addCommand(ConfigCommand(config, mr))
+    ..addCommand(ConfigCommand(config, configOptions))
+    ..addCommand(EditCommand(db, config, configOptions, projectOptions))
     ..addCommand(SetupCommand(tokens))
     ..addCommand(PreFlightCommand(config, db))
     ..addCommand(UploadCommand(config, db, mr));

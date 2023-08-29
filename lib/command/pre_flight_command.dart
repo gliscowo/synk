@@ -44,7 +44,7 @@ class PreFlightCommand extends SynkCommand {
     if (index.isNotEmpty) {
       print(c.success("${index.length} projects in database: ${index.map((e) => e.displayName).join(", ")}"));
     } else {
-      print(c.success("You don't currently have any projects in the databse. Run 'synk create' to get started"));
+      print(c.warning("You don't currently have any projects in the databse. Run 'synk create' to get started"));
     }
   }
 }

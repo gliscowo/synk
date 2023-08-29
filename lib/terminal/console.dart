@@ -119,8 +119,8 @@ extension SynkConsole on Console {
   /// Wrapper for [SynkConsole.prompt] which allows verifying
   /// the input provided by the user.
   ///
-  /// If the input is accepted, [validator] must return `null`,
-  /// otherwise it must return a user-friendly string describing the error
+  /// If the input is accepted, [validator] must return `null`
+  /// and a user-friendly string describing the error otherwise
   String promptValidated(
     String prompt,
     String? Function(String input) validator, {
@@ -159,8 +159,8 @@ extension SynkConsole on Console {
   /// Wrapper for [SynkConsole.prompt] which allows verifying
   /// the input provided by the user.
   ///
-  /// If the input is accepted, [validator] must return `null`,
-  /// otherwise it must return a user-friendly string describing the error
+  /// If the input is accepted, [validator] must return `null`
+  /// and a user-friendly string describing the error otherwise
   Future<String> promptValidatedAsync(
     String prompt,
     Future<String?> Function(String input) validator, {

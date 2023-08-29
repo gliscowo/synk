@@ -39,11 +39,13 @@ const _$ReleaseTypeEnumMap = {
 };
 
 Relation _$RelationFromJson(Map<String, dynamic> json) => Relation(
+      json['name'] as String,
       $enumDecode(_$ModrinthDependencyTypeEnumMap, json['type']),
       Map<String, String>.from(json['project_id_by_platform'] as Map),
     );
 
 Map<String, dynamic> _$RelationToJson(Relation instance) => <String, dynamic>{
+      'name': instance.name,
       'type': _$ModrinthDependencyTypeEnumMap[instance.type]!,
       'project_id_by_platform': instance.projectIdByPlatform,
     };

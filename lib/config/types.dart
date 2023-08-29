@@ -84,7 +84,18 @@ class Project {
           ["Project ID", projectId],
           [],
           ["Loaders", loaders.join(", ")],
-          if (primaryFilePattern != null) ["Primary files", primaryFilePattern!]
+          if (primaryFilePattern != null) ["Primary files", primaryFilePattern!],
+          [],
+          for (var MapEntry(:key, :value) in idByService.entries) ["$key id", value],
+          if (relations.isNotEmpty) ...[
+            [],
+            ["Relations"],
+            [],
+            for (var Relation(:name, :type, :projectIdByPlatform) in relations) ...[
+              [name, type.name],
+              for (var MapEntry(:key, :value) in projectIdByPlatform.entries) ["  $key", "  $value"]
+            ]
+          ],
         ]))
       .render();
 

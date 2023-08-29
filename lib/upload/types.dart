@@ -52,10 +52,11 @@ class UploadRequest {
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class Relation {
+  final String name;
   final ModrinthDependencyType type;
   final Map<String, String> projectIdByPlatform;
 
-  Relation(this.type, this.projectIdByPlatform);
+  Relation(this.name, this.type, this.projectIdByPlatform);
 
   factory Relation.fromJson(Map<String, dynamic> json) => _$RelationFromJson(json);
   Map<String, dynamic> toJson() => _$RelationToJson(this);
