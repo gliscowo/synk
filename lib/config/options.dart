@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:modrinth_api/modrinth_api.dart';
-import 'package:synk/upload/upload_request.dart';
 
 import '../terminal/ansi.dart' as c;
 import '../terminal/changelog_reader.dart';
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
+import '../upload/upload_request.dart';
 import '../upload/upload_service.dart';
 import 'config.dart';
 import 'project.dart';

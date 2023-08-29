@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:args/args.dart' show ArgResults;
-import 'package:synk/config/database.dart';
 
 import '../config/config.dart';
+import '../config/database.dart';
 import '../config/options.dart';
 import '../config/project.dart';
 import '../terminal/ansi.dart' as c;
