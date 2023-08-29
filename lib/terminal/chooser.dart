@@ -35,9 +35,9 @@ abstract class _Chooser<T, R> {
       _keyCallback(key);
 
       if (key.controlChar == ControlCharacter.arrowUp) {
-        _focused = max(0, min(_focused - 1, _options.length - 1));
+        _focused = (_focused - 1) % _options.length;
       } else if (key.controlChar == ControlCharacter.arrowDown) {
-        _focused = max(0, min(_focused + 1, _options.length - 1));
+        _focused = (_focused + 1) % _options.length;
       }
 
       _baseIndex = max(0, min(_focused - 3, _options.length - 6));
