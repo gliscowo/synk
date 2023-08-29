@@ -1,5 +1,5 @@
 import 'config.dart';
-import 'types.dart';
+import 'project.dart';
 
 class ProjectDatabase {
   static const _projectPath = ["projects"];

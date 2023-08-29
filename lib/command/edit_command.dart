@@ -5,7 +5,7 @@ import 'package:synk/config/database.dart';
 
 import '../config/config.dart';
 import '../config/options.dart';
-import '../config/types.dart';
+import '../config/project.dart';
 import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import 'synk_command.dart';

@@ -7,11 +7,10 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 
-import '../terminal/changelog_reader.dart';
 import '../terminal/console.dart';
-import '../upload/types.dart';
+import '../upload/upload_request.dart';
 
-part 'types.g.dart';
+part 'project.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake, constructor: "_json")
 class Project {
@@ -101,17 +100,4 @@ class Project {
 
   factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectToJson(this);
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class ConfigData {
-  static const defaultValues = ConfigData(null, null);
-
-  final List<String>? defaultMinecraftVersions;
-  final ChangelogReader? changelogReader;
-
-  const ConfigData(this.defaultMinecraftVersions, this.changelogReader);
-
-  factory ConfigData.fromJson(Map<String, dynamic> json) => _$ConfigDataFromJson(json);
-  Map<String, dynamic> toJson() => _$ConfigDataToJson(this);
 }

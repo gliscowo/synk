@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dart_console/dart_console.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart';
 
 import '../terminal/changelog_reader.dart';
 import 'database.dart';
-import 'types.dart';
+import 'project.dart';
+
+part 'config.g.dart';
 
 const _jsonEncoder = JsonEncoder.withIndent("  ");
 
@@ -121,6 +124,19 @@ class SynkConfig {
           ["Default changelog mode", _changelogReader ?? "undefined"],
         ]))
       .render();
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+class ConfigData {
+  static const defaultValues = ConfigData(null, null);
+
+  final List<String>? defaultMinecraftVersions;
+  final ChangelogReader? changelogReader;
+
+  const ConfigData(this.defaultMinecraftVersions, this.changelogReader);
+
+  factory ConfigData.fromJson(Map<String, dynamic> json) => _$ConfigDataFromJson(json);
+  Map<String, dynamic> toJson() => _$ConfigDataToJson(this);
 }
 
 abstract interface class ConfigOverlay {

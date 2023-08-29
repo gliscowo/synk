@@ -2,8 +2,8 @@ import 'dart:collection';
 
 import 'package:modrinth_api/modrinth_api.dart';
 
-import '../config/types.dart';
-import 'types.dart';
+import '../config/project.dart';
+import 'upload_request.dart';
 
 abstract interface class UploadService {
   static final _registry = <String, UploadService>{};

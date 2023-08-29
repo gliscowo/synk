@@ -1,7 +1,7 @@
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:synk/config/config.dart';
 import 'package:synk/config/database.dart';
-import 'package:synk/config/types.dart';
+import 'package:synk/config/project.dart';
 import 'package:test/test.dart';
 
 void main() {

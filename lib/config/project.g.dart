@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'types.dart';
+part of 'project.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -38,32 +38,4 @@ const _$ModrinthProjectTypeEnumMap = {
   ModrinthProjectType.modpack: 'modpack',
   ModrinthProjectType.resourcepack: 'resourcepack',
   ModrinthProjectType.shader: 'shader',
-};
-
-ConfigData _$ConfigDataFromJson(Map<String, dynamic> json) => ConfigData(
-      (json['default_minecraft_versions'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      $enumDecodeNullable(_$ChangelogReaderEnumMap, json['changelog_reader']),
-    );
-
-Map<String, dynamic> _$ConfigDataToJson(ConfigData instance) {
-  final val = <String, dynamic>{};
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('default_minecraft_versions', instance.defaultMinecraftVersions);
-  writeNotNull(
-      'changelog_reader', _$ChangelogReaderEnumMap[instance.changelogReader]);
-  return val;
-}
-
-const _$ChangelogReaderEnumMap = {
-  ChangelogReader.editor: 'editor',
-  ChangelogReader.prompt: 'prompt',
-  ChangelogReader.file: 'file',
 };

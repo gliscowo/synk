@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../config/types.dart';
+import '../config/project.dart';
 import 'console.dart';
 
 const _changelogFilename = "changelog.md";

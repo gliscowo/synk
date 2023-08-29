@@ -6,17 +6,7 @@ import 'package:modrinth_api/modrinth_api.dart';
 import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 
-part 'types.g.dart';
-
-enum ReleaseType implements Formattable {
-  release(c.green),
-  beta(c.yellow),
-  alpha(c.red);
-
-  @override
-  final c.AnsiControlSequence color;
-  const ReleaseType(this.color);
-}
+part 'upload_request.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class UploadRequest {
@@ -48,6 +38,16 @@ class UploadRequest {
 
   static List<String> _filesToJson(List<File> files) => files.map((e) => e.path).toList();
   static List<File> _filesFromJson(List<String> files) => files.map((e) => File(e)).toList();
+}
+
+enum ReleaseType implements Formattable {
+  release(c.green),
+  beta(c.yellow),
+  alpha(c.red);
+
+  @override
+  final c.AnsiControlSequence color;
+  const ReleaseType(this.color);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

@@ -11,11 +11,11 @@ import 'package:toml/toml.dart';
 
 import '../config/config.dart';
 import '../config/database.dart';
-import '../config/types.dart';
+import '../config/project.dart';
 import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
-import '../upload/types.dart';
+import '../upload/upload_request.dart';
 import 'synk_command.dart';
 
 class UploadCommand extends SynkCommand {

@@ -6,10 +6,10 @@ import 'package:http_parser/http_parser.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 
+import '../config/project.dart';
 import '../config/tokens.dart';
-import '../config/types.dart';
 import '../terminal/console.dart';
-import 'types.dart';
+import 'upload_request.dart';
 import 'upload_service.dart';
 
 part 'curseforge_service.g.dart';

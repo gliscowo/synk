@@ -3,10 +3,10 @@ import 'package:http/http.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 
+import '../config/project.dart';
 import '../config/tokens.dart';
-import '../config/types.dart';
 import '../terminal/console.dart';
-import 'types.dart';
+import 'upload_request.dart';
 import 'upload_service.dart';
 
 class GitHubUploadService implements UploadService {

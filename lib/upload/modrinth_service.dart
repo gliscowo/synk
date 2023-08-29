@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 
+import '../config/project.dart';
 import '../config/tokens.dart';
-import '../config/types.dart';
-import 'types.dart';
+import 'upload_request.dart';
 import 'upload_service.dart';
 
 class ModrinthUploadService implements UploadService {

@@ -5,7 +5,7 @@ import 'package:modrinth_api/modrinth_api.dart';
 
 import '../config/config.dart';
 import '../config/database.dart';
-import '../config/types.dart';
+import '../config/project.dart';
 import '../terminal/changelog_reader.dart';
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
