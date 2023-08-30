@@ -22,7 +22,7 @@ import 'package:synk/upload/github_service.dart';
 import 'package:synk/upload/modrinth_service.dart';
 import 'package:synk/upload/upload_service.dart';
 
-void main(List<String> arguments) async {
+Future<void> main(List<String> arguments) async {
   final client = Client();
 
   final configProvider = const ConfigProvider("synk");

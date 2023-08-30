@@ -18,6 +18,8 @@ abstract interface class UploadService {
     _registry[service.id] = service;
   }
 
+  static void clearRegistry() => _registry.clear();
+
   /// Fetch the upload service which identifies itself
   /// with [id] from the registry, given that it was
   /// previously registered

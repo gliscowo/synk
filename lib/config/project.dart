@@ -81,9 +81,13 @@ class Project {
         ..title = "${type.name.capitalized} - $displayName"
         ..insertRows([
           ["Project ID", projectId],
-          [],
           ["Loaders", loaders.join(", ")],
+          [],
           if (primaryFilePattern != null) ["Primary files", primaryFilePattern!],
+          if (secondaryFilePatterns.isNotEmpty) ...[
+            ["Secondary files"],
+            for (var MapEntry(:key, :value) in secondaryFilePatterns.entries) ["└─$key", value]
+          ],
           [],
           for (var MapEntry(:key, :value) in idByService.entries) ["$key id", value],
           if (relations.isNotEmpty) ...[
@@ -92,7 +96,7 @@ class Project {
             [],
             for (var Relation(:name, :type, :projectIdByPlatform) in relations) ...[
               [name, type.name],
-              for (var MapEntry(:key, :value) in projectIdByPlatform.entries) ["  $key", "  $value"]
+              for (var MapEntry(:key, :value) in projectIdByPlatform.entries) ["└─$key", "└─$value"]
             ]
           ],
         ]))

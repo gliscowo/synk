@@ -11,7 +11,8 @@ import '../upload/upload_service.dart';
 import 'config.dart';
 import 'project.dart';
 
-final _addRelationSentinel = Relation("Add new", ModrinthDependencyType.required, const {});
+final _addRelationSentinel = Relation("Add new relation", ModrinthDependencyType.required, const {});
+final _addSecondaryFilePatternSentinel = "_synk_add_new_pattern";
 
 class Option<H> {
   /// The name of this option to be displayed
@@ -105,42 +106,48 @@ List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
           project.idByService[service.id] = newId;
         }
       }),
-      Option("Relations", (project) async {
-        final relation = console.choose(
-          [...project.relations, _addRelationSentinel],
-          "Choose relation",
-          formatter: (entry) => !identical(entry, _addRelationSentinel) ? "Remove ${entry.name}" : entry.name,
-          ephemeral: true,
-        );
+      Option("Add/remove relations", (project) async {
+        final relation = project.relations.isNotEmpty
+            ? console.choose(
+                [...project.relations, _addRelationSentinel],
+                "Choose option",
+                formatter: (entry) => !identical(entry, _addRelationSentinel) ? "Remove ${entry.name}" : entry.name,
+                ephemeral: true,
+              )
+            : null;
 
-        if (identical(relation, _addRelationSentinel)) {
-          final newRelationName = console.prompt("New relation name");
-          final newRelationType =
-              console.choose(ModrinthDependencyType.values, "New relation type", formatter: (entry) => entry.name);
+        if (relation == null || identical(relation, _addRelationSentinel)) {
+          if (relation == null) {
+            print(c.hint("${project.displayName} has no relations, adding a new one"));
+          }
+
+          final relationName = console.prompt("Relation name");
+          final relationType = console.choose(
+            ModrinthDependencyType.values,
+            "Relation type",
+            formatter: (entry) => entry.name,
+          );
 
           final idByService = <String, String>{};
           final services = [...UploadService.registered];
-          while (services.isNotEmpty) {
-            final service = services.length == 1
-                ? services.single
-                : console.choose(
-                    services,
-                    "Choose platform",
-                    formatter: (entry) => entry.name,
-                    ephemeral: true,
-                  );
+          do {
+            final service = services.singleOrNull ??
+                console.choose<UploadService>(
+                  services,
+                  "Choose platform",
+                  formatter: (entry) => entry.name,
+                  ephemeral: true,
+                );
 
             idByService[service.id] = console.prompt("${service.name} dependency ID");
-
             services.remove(service);
-            if (services.isNotEmpty && !console.ask("Add more", ephemeral: true)) break;
-          }
+          } while (services.isNotEmpty && console.ask("Add more"));
 
-          project.relations.add(Relation(newRelationName, newRelationType, idByService));
-          print(c.success("New relation '$newRelationName' added"));
+          project.relations.add(Relation(relationName, relationType, idByService));
+          print(c.success("New relation '$relationName' added"));
         } else {
           project.relations.remove(relation);
-          print(c.warning("Relation '${relation.name} removed'"));
+          print(c.warning("Relation '${relation.name}' removed"));
         }
       }),
       Option("Changelog file path", (project) {
@@ -169,6 +176,32 @@ List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
           project.primaryFilePattern = null;
         } else {
           project.primaryFilePattern = newPattern;
+        }
+      }),
+      Option("Add/remove secondary file patterns", (project) {
+        final patternId = project.secondaryFilePatterns.isNotEmpty
+            ? console.choose(
+                [...project.secondaryFilePatterns.keys, _addSecondaryFilePatternSentinel],
+                "Choose option",
+                formatter: (entry) =>
+                    !identical(entry, _addSecondaryFilePatternSentinel) ? "Remove '$entry'" : "Add new pattern",
+                ephemeral: true,
+              )
+            : null;
+
+        if (patternId == null || identical(patternId, _addSecondaryFilePatternSentinel)) {
+          if (patternId == null) {
+            print(c.hint("${project.displayName} has no secondary file patterns, adding a new one"));
+          }
+
+          final newPatternId = console.prompt("Pattern ID");
+          final newPattern = console.prompt("Pattern");
+
+          project.secondaryFilePatterns[newPatternId] = newPattern;
+          print(c.success("New secondary file pattern '$newPatternId' added"));
+        } else {
+          project.secondaryFilePatterns.remove(patternId);
+          print(c.warning("Secondary file pattern '$patternId' removed"));
         }
       }),
     ];
