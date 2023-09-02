@@ -15,8 +15,8 @@ part 'config.g.dart';
 const _jsonEncoder = JsonEncoder.withIndent("  ");
 
 class ConfigProvider {
-  final String _baseDirName;
-  const ConfigProvider(this._baseDirName);
+  final String _baseDir;
+  const ConfigProvider(this._baseDir);
 
   /// Serialize [content] into `<name>.json`. The file's location
   /// may be further differentiated using [path], which is preprended
@@ -59,9 +59,11 @@ class ConfigProvider {
   File _resolve(String name, List<String> path) =>
       File(setExtension(join(_baseDirectory, joinAll(path), name), ".json"));
 
-  String get _baseDirectory => Platform.isWindows
-      ? join(Platform.environment["APPDATA"]!, _baseDirName)
-      : join(Platform.environment["HOME"]!, ".config", _baseDirName);
+  String get _baseDirectory => isAbsolute(_baseDir)
+      ? _baseDir
+      : Platform.isWindows
+          ? join(Platform.environment["APPDATA"]!, _baseDir)
+          : join(Platform.environment["HOME"]!, ".config", _baseDir);
 }
 
 class SynkConfig {
@@ -70,6 +72,7 @@ class SynkConfig {
   final ConfigProvider _provider;
   ConfigOverlay? _overlay;
 
+  bool _setupCompleted = false;
   List<String>? _defaultMinecraftVersions;
   ChangelogReader? _changelogReader;
 
@@ -82,6 +85,12 @@ class SynkConfig {
   set overlay(ConfigOverlay? overlay) {
     _overlay = overlay;
     _load();
+  }
+
+  bool get setupCompleted => _setupCompleted;
+  set setupCompleted(bool value) {
+    _setupCompleted = value;
+    _save();
   }
 
   List<String> get minecraftVersions => UnmodifiableListView(_defaultMinecraftVersions ?? const []);
@@ -105,10 +114,11 @@ class SynkConfig {
     var data = ConfigData.fromJson(json);
     _defaultMinecraftVersions = data.defaultMinecraftVersions;
     _changelogReader = data.changelogReader;
+    _setupCompleted = data.setupCompleted;
   }
 
   void _save() {
-    var json = ConfigData(_defaultMinecraftVersions, _changelogReader).toJson();
+    var json = ConfigData(_defaultMinecraftVersions, _changelogReader, _setupCompleted).toJson();
 
     if (_overlay != null) {
       _overlay?.overrides = json;
@@ -118,7 +128,6 @@ class SynkConfig {
   }
 
   String get formatted => (Table()
-        // ..title = "${type.name.capitalized} - $displayName"
         ..insertRows([
           ["Default Minecraft versions", _defaultMinecraftVersions?.join(", ") ?? "none"],
           ["Default changelog mode", _changelogReader ?? "undefined"],
@@ -128,12 +137,13 @@ class SynkConfig {
 
 @JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
 class ConfigData {
-  static const defaultValues = ConfigData(null, null);
+  static const defaultValues = ConfigData(null, null, false);
 
   final List<String>? defaultMinecraftVersions;
   final ChangelogReader? changelogReader;
+  final bool setupCompleted;
 
-  const ConfigData(this.defaultMinecraftVersions, this.changelogReader);
+  const ConfigData(this.defaultMinecraftVersions, this.changelogReader, this.setupCompleted);
 
   factory ConfigData.fromJson(Map<String, dynamic> json) => _$ConfigDataFromJson(json);
   Map<String, dynamic> toJson() => _$ConfigDataToJson(this);

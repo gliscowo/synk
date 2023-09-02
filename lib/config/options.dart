@@ -24,14 +24,14 @@ class Option<H> {
 
   /// Ask the user to update the stored
   /// value of this option
-  FutureOr<void> update(H holder) async => await _updateFunc(holder);
+  FutureOr<void> update(H holder) => _updateFunc(holder);
 }
 
 List<Option<SynkConfig>> createConfigOptions(ModrinthApi mr) => [
       Option("Changelog reader", (config) {
         config.changelogReader = console.choose<ChangelogReader>(
           ChangelogReader.values,
-          "New default changelog reader",
+          "Default changelog reader",
           selected: ChangelogReader.values.indexOf(config.changelogReader),
           formatter: (entry) => entry.name,
         );
@@ -52,7 +52,7 @@ List<Option<SynkConfig>> createConfigOptions(ModrinthApi mr) => [
       })
     ];
 
-List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
+List<Option<Project>> createProjectOptions(UploadServices uploadServices, ModrinthApi mr) => [
       Option("Display Name", (project) {
         project.displayName = console.promptValidated(
           "New display name",
@@ -79,7 +79,7 @@ List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
       }),
       Option("Platform-specific project IDs", (project) async {
         final service = console.choose(
-          UploadService.registered,
+          uploadServices.all,
           "Choose platform",
           formatter: (entry) => entry.name,
           ephemeral: true,
@@ -97,9 +97,9 @@ List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
 
         if (newId.isEmpty) {
           console.undoLine();
-          print(
-            c.warning("${service.name} project ID removed - ${project.displayName} will no longer be uploaded there"),
-          );
+          print(c.warning(
+            "${service.name} project ID removed - ${project.displayName} will no longer be uploaded there",
+          ));
 
           project.idByService.remove(service.id);
         } else {
@@ -129,7 +129,7 @@ List<Option<Project>> createProjectOptions(ModrinthApi mr) => [
           );
 
           final idByService = <String, String>{};
-          final services = [...UploadService.registered];
+          final services = [...uploadServices.all];
           do {
             final service = services.singleOrNull ??
                 console.choose<UploadService>(

@@ -13,7 +13,9 @@ import 'synk_command.dart';
 class PreFlightCommand extends SynkCommand {
   final SynkConfig _config;
   final ProjectDatabase _db;
-  PreFlightCommand(this._config, this._db)
+  final UploadServices _uploadServices;
+
+  PreFlightCommand(this._config, this._db, this._uploadServices)
       : super(
           "pre-flight",
           "Run some checks to make sure you're ready for uploading",
@@ -23,7 +25,7 @@ class PreFlightCommand extends SynkCommand {
   Future<FutureOr<void>> execute(ArgResults args) async {
     final tokenTable = Table()..title = "Tokens";
 
-    for (final service in UploadService.registered) {
+    for (final service in _uploadServices.all) {
       final result = await Spinner.wait("Pinging ${service.name}", service.testAuth());
       if (result == null) {
         tokenTable.insertRow([service.name, c.green("✓")]);

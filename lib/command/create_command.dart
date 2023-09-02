@@ -15,9 +15,10 @@ import 'synk_command.dart';
 class CreateCommand extends SynkCommand {
   final ProjectDatabase _db;
   final ModrinthApi _mr;
+  final UploadServices _uploadServices;
   final SynkConfig _config;
 
-  CreateCommand(this._db, this._mr, this._config)
+  CreateCommand(this._db, this._mr, this._uploadServices, this._config)
       : super(
           "create",
           "Create a new project and store it in the database",
@@ -73,7 +74,7 @@ class CreateCommand extends SynkCommand {
 
     final idByService = <String, String>{};
     if (console.ask("Set up platform-specific project IDs now", ephemeral: true)) {
-      final services = [...UploadService.registered];
+      final services = [..._uploadServices.all];
       while (services.isNotEmpty) {
         final service = services.length == 1
             ? services.single

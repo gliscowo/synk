@@ -6,29 +6,6 @@ import '../config/project.dart';
 import 'upload_request.dart';
 
 abstract interface class UploadService {
-  static final _registry = <String, UploadService>{};
-
-  /// Globally register [service] under its [id] to be retrieved
-  /// by [fromId] and listed by [registered]
-  static void register(UploadService service) {
-    if (_registry.containsKey(service.id)) {
-      throw ArgumentError("An upload service with id '${service.id}' is already registered");
-    }
-
-    _registry[service.id] = service;
-  }
-
-  static void clearRegistry() => _registry.clear();
-
-  /// Fetch the upload service which identifies itself
-  /// with [id] from the registry, given that it was
-  /// previously registered
-  static UploadService? fromId(String id) => _registry[id];
-
-  /// Retrieve a view of all upload services currently
-  /// in the registry
-  static List<UploadService> get registered => UnmodifiableListView(_registry.values);
-
   /// A `[a-z-_]` string to uniquely identify this service
   String get id;
 
@@ -57,6 +34,27 @@ abstract interface class UploadService {
   /// On success, return `null`, on failure, return an
   /// (ideally) user-friendly message describing the issues
   Future<String?> testAuth();
+}
+
+class UploadServices {
+  final Map<String, UploadService> _services = {};
+  UploadServices(List<UploadService> services) {
+    for (final service in services) {
+      if (_services.containsKey(service.id)) {
+        throw ArgumentError("Duplicate service id '${service.id}'", "services");
+      }
+
+      _services[service.id] = service;
+    }
+  }
+
+  /// Retrieve an unmodifiable view of a all
+  /// services known to this provicder
+  List<UploadService> get all => UnmodifiableListView(_services.values);
+
+  /// Get the service identified by [id], or
+  /// `null` if no such service is known to this provider
+  UploadService? operator [](String id) => _services[id];
 }
 
 /// An exception thrown by [UploadService.upload]

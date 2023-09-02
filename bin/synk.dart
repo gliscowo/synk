@@ -22,31 +22,43 @@ import 'package:synk/upload/github_service.dart';
 import 'package:synk/upload/modrinth_service.dart';
 import 'package:synk/upload/upload_service.dart';
 
+const _configDirEnv = "SYNK_CONFIG_DIR";
+
 Future<void> main(List<String> arguments) async {
   final client = Client();
 
-  final configProvider = const ConfigProvider("synk");
+  final configProvider = ConfigProvider(Platform.environment[_configDirEnv] ?? "synk");
+  if (Platform.environment.containsKey(_configDirEnv)) {
+    print(c.hint("Using custom config directory '${Platform.environment[_configDirEnv]}'"));
+  }
+
   final db = ProjectDatabase(configProvider);
   final tokens = TokenStore(configProvider);
   final config = SynkConfig(configProvider);
 
   final mr = ModrinthApi.createClient("gliscowo/synk", token: tokens["modrinth"]);
-  UploadService.register(ModrinthUploadService(mr, tokens));
-  UploadService.register(CurseForgeUploadService(client, tokens));
-  UploadService.register(GitHubUploadService(tokens, client));
+  final uploadServices = UploadServices([
+    ModrinthUploadService(mr, tokens),
+    CurseForgeUploadService(client, tokens),
+    GitHubUploadService(tokens, client),
+  ]);
 
   final configOptions = createConfigOptions(mr);
-  final projectOptions = createProjectOptions(mr);
+  final projectOptions = createProjectOptions(uploadServices, mr);
 
   final runner = CommandRunner<void>("synk", "monochrome to colors")
-    ..addCommand(CreateCommand(db, mr, config))
+    ..addCommand(CreateCommand(db, mr, uploadServices, config))
     ..addCommand(DeleteCommand(db))
     ..addCommand(IndexCommand(db))
-    ..addCommand(ConfigCommand(config, configOptions))
+    ..addCommand(ConfigCommand(config, tokens, uploadServices, configOptions))
     ..addCommand(EditCommand(db, config, configOptions, projectOptions))
-    ..addCommand(SetupCommand(tokens))
-    ..addCommand(PreFlightCommand(config, db))
+    ..addCommand(SetupCommand(tokens, uploadServices, config, configOptions))
+    ..addCommand(PreFlightCommand(config, db, uploadServices))
     ..addCommand(UploadCommand(config, db, mr));
+
+  if (!config.setupCompleted) {
+    arguments = const ["setup"];
+  }
 
   try {
     await runner.run(arguments);
