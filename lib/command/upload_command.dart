@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:args/args.dart';
+import 'package:dart_console/dart_console.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart';
@@ -16,14 +17,22 @@ import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import '../terminal/spinner.dart';
 import '../upload/upload_request.dart';
+import '../upload/upload_service.dart';
 import 'synk_command.dart';
 
 class UploadCommand extends SynkCommand {
+  static const _retryArg = "retry";
+  static const _dryRunArg = "dry-run";
+  static const _confirmServicesArg = "confirm-services";
+  static const _lastUploadKey = "last_upload";
+
+  final ConfigProvider _provider;
   final ProjectDatabase _db;
   final SynkConfig _config;
   final ModrinthApi _mr;
+  final UploadServices _uploadServices;
 
-  UploadCommand(this._config, this._db, this._mr)
+  UploadCommand(this._provider, this._config, this._db, this._mr, this._uploadServices)
       : super(
           "upload",
           "Upload a new set of atifacts for the given project",
@@ -31,13 +40,18 @@ class UploadCommand extends SynkCommand {
         ) {
     argParser
       ..addFlag(
-        "retry",
+        _retryArg,
         help: "Re-run the previous upload process (useful if one or more of the uploads failed)",
         negatable: false,
       )
       ..addFlag(
-        "dry-run",
+        _dryRunArg,
         help: "Run the upload process as normal but do not actually send any web requests",
+        negatable: false,
+      )
+      ..addFlag(
+        _confirmServicesArg,
+        help: "Ask before uploading to each individual service",
         negatable: false,
       );
   }
@@ -52,6 +66,81 @@ class UploadCommand extends SynkCommand {
       return;
     }
 
+    if (args.wasParsed(_dryRunArg)) {
+      print(c.warning("Doing a dry run, no upload requests will be sent"));
+    }
+
+    Map<String, bool>? previousUploadSuccess;
+    UploadRequest request;
+
+    if (!args.wasParsed(_retryArg)) {
+      final newRequest = await getRequestFromUser(args, project);
+      if (newRequest == null) return;
+
+      request = newRequest;
+    } else {
+      final previousLog = _provider.readConfigData(_lastUploadKey);
+      if (previousLog == null) {
+        print(c.error("You did not try to upload anything yet"));
+        return;
+      }
+
+      request = UploadRequest.fromJson(previousLog["request"]);
+      previousUploadSuccess = (previousLog["upload_succeeded"] as Map<String, dynamic>).cast();
+    }
+
+    console
+      ..writeLine()
+      ..writeLine("The following release will be created:")
+      ..write((Table()
+            ..insertRow(["Title", request.title])
+            ..insertRow(["Version", request.version])
+            ..insertRow(["Release Type", request.releaseType.color(request.releaseType.name)])
+            ..insertRow(["Game Versions", request.compatibleGameVersions.join(", ")])
+            ..insertRow(["Changelog", request.changelog.truncate(60)]))
+          .render());
+
+    final uploadSucceeded = <String, bool>{};
+    final log = {
+      "request": request.toJson(),
+      "upload_succeeded": uploadSucceeded,
+    };
+
+    if (previousUploadSuccess != null) {
+      uploadSucceeded.addAll(previousUploadSuccess);
+
+      for (final serviceId in project.idByService.keys) {
+        final service = _uploadServices[serviceId]!;
+        if (!previousUploadSuccess.containsKey(serviceId)) {
+          print(c.hint("Uploading to ${service.name} was manually omitted previously, skipping"));
+          continue;
+        }
+
+        if (previousUploadSuccess[serviceId]!) {
+          print(c.hint("Uploading to ${service.name} succeeded previously, skipping"));
+          continue;
+        }
+
+        _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
+      }
+    } else {
+      for (final serviceId in project.idByService.keys) {
+        final service = _uploadServices[serviceId]!;
+        if (args.wasParsed(_confirmServicesArg) && !console.ask("Upload to ${service.name}")) {
+          continue;
+        }
+
+        _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
+      }
+    }
+
+    _provider.saveConfigData(_lastUploadKey, log);
+  }
+
+  @override
+  String get invocation => "${super.invocation} [<file(s)>]";
+
+  Future<UploadRequest?> getRequestFromUser(ArgResults args, Project project) async {
     String version;
     List<File> files;
     if (args.rest.length < 2 && project.primaryFilePattern == null) {
@@ -59,14 +148,14 @@ class UploadCommand extends SynkCommand {
         "You must provide file(s) to upload, as there is no primary file pattern configured in project ${project.displayName}",
       ));
       print(c.hint("You can run 'synk edit ${project.projectId}' to add one"));
-      return;
+      return null;
     } else if (args.rest.length >= 2) {
       files = args.rest.skip(1).map((e) => File(e)).toList();
       for (var file in files) {
         if (file.existsSync()) continue;
 
         print(c.error("Could find file ${file.path}"));
-        return;
+        return null;
       }
 
       version = askUserIfVersionUnknown(basename(files.first.path), await tryReadVersion(project, files.first));
@@ -92,7 +181,10 @@ class UploadCommand extends SynkCommand {
         resultFormatter: (entry) => entry.$2 ?? basename(entry.$1.path),
       );
 
-      files.addAll(project.resolveSecondaryFiles(chosen.$1));
+      files
+        ..clear()
+        ..add(chosen.$1)
+        ..addAll(project.resolveSecondaryFiles(chosen.$1));
       version = askUserIfVersionUnknown(basename(chosen.$1.path), chosen.$2);
     }
 
@@ -114,13 +206,17 @@ class UploadCommand extends SynkCommand {
       gameVersions = console.chooseMultiple(versionList, "Select compatible Minecraft versions");
     }
 
+    final parsedVersion = Version.parse(version);
+    final displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
+
     final changelog = await _config.changelogReader.getChangelog(project);
+    final title = _config.versionNamePattern
+        .replaceAll("{project_name}", project.displayName)
+        .replaceAll("{version}", displayVersion.toString())
+        .replaceAll("{game_version}", gameVersions.first);
 
-    // final request = UploadRequest(title, version, changelog, releaseType, gameVersions, project.relations, files);
+    return UploadRequest(title, version, changelog, releaseType, gameVersions, project.relations, files);
   }
-
-  @override
-  String get invocation => "${super.invocation} [<file(s)>]";
 
   /// Try to read the version of the given artifact according to the
   /// metadata formats prescribed by different loaders / modpack formats
@@ -178,6 +274,41 @@ class UploadCommand extends SynkCommand {
       return console.prompt("Enter version");
     } else {
       return maybeVersion;
+    }
+  }
+
+  /// Try to submit [request] for [project] to [service]. If [dryRun] is `true`,
+  /// do not actually call [UploadService.upload] - instead, always assume success.
+  ///
+  /// If the request succeeds, the resulting release URI is logged and `true`
+  /// is stored under [service]'s id in [sucesssRecord]
+  ///
+  /// IF the request fails, a warning with the causing error is logged and `false`
+  /// is stored under [service]'s id in [sucesssRecord]
+  Future<void> _tryUpload(
+    bool dryRun,
+    Project project,
+    UploadRequest request,
+    UploadService service,
+    Map<String, bool> sucesssRecord,
+  ) async {
+    print("Uploading to ${service.name}...");
+
+    try {
+      Uri? uploadedFile;
+      if (!dryRun) {
+        uploadedFile = await service.upload(project, request);
+      }
+
+      console
+        ..undoLine()
+        ..writeLine(
+          c.success("Uploaded to ${service.name} (${uploadedFile ?? "A link to the created release would go here"})"),
+        );
+      sucesssRecord[service.id] = true;
+    } on UploadException catch (e) {
+      print(c.error("Uploading to ${service.name} failed: ${e.message}"));
+      sucesssRecord[service.id] = false;
     }
   }
 }

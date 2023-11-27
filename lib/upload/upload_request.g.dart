@@ -18,7 +18,7 @@ UploadRequest _$UploadRequestFromJson(Map<String, dynamic> json) =>
       (json['relations'] as List<dynamic>)
           .map((e) => Relation.fromJson(e as Map<String, dynamic>))
           .toList(),
-      UploadRequest._filesFromJson(json['files'] as List<String>),
+      UploadRequest._filesFromJson(json['files'] as List),
     );
 
 Map<String, dynamic> _$UploadRequestToJson(UploadRequest instance) =>

@@ -11,7 +11,8 @@ ConfigData _$ConfigDataFromJson(Map<String, dynamic> json) => ConfigData(
           ?.map((e) => e as String)
           .toList(),
       $enumDecodeNullable(_$ChangelogReaderEnumMap, json['changelog_reader']),
-      json['setup_completed'] as bool,
+      json['version_name_pattern'] as String?,
+      json['setup_completed'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ConfigDataToJson(ConfigData instance) {
@@ -26,6 +27,7 @@ Map<String, dynamic> _$ConfigDataToJson(ConfigData instance) {
   writeNotNull('default_minecraft_versions', instance.defaultMinecraftVersions);
   writeNotNull(
       'changelog_reader', _$ChangelogReaderEnumMap[instance.changelogReader]);
+  writeNotNull('version_name_pattern', instance.versionNamePattern);
   val['setup_completed'] = instance.setupCompleted;
   return val;
 }

@@ -10,7 +10,7 @@ import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import 'synk_command.dart';
 
-final _exitSentinel = Option("Save and exit", (_) {});
+final _exitSentinel = (Option("Save and exit", (_) {}), null);
 
 class EditCommand extends SynkCommand {
   final ProjectDatabase _db;
@@ -35,20 +35,28 @@ class EditCommand extends SynkCommand {
 
     print(project.formatted);
 
-    final menuOptions = [..._projectOptions, _exitSentinel];
+    _config.overlay = ConfigOverlay.ofProject(_db, project);
+    final menuOptions = [
+      ..._projectOptions.map((e) => (e, project)),
+      ..._configOptions.map((e) => (e, _config)),
+      _exitSentinel,
+    ];
+
     while (true) {
       final option = console.choose(
         menuOptions,
         "Option to edit",
-        formatter: (entry) => entry.name,
+        formatter: (entry) => entry.$1.name,
         ephemeral: true,
       );
 
       if (identical(_exitSentinel, option)) break;
-      await option.update(project);
+      await option.$1.update(option.$2);
     }
 
     _db[project.projectId] = project;
     print(c.success("Changes applied"));
+
+    _config.overlay = null;
   }
 }

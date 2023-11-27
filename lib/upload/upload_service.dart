@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:modrinth_api/modrinth_api.dart';
+import 'package:synk/terminal/console.dart';
 
 import '../config/project.dart';
 import 'upload_request.dart';
@@ -55,6 +56,43 @@ class UploadServices {
   /// Get the service identified by [id], or
   /// `null` if no such service is known to this provider
   UploadService? operator [](String id) => _services[id];
+
+  Iterable<UploadService> choose(String nextMessage) => _ServiceChooserIterable(_services.values, nextMessage);
+}
+
+class _ServiceChooserIterable with Iterable<UploadService> {
+  final Iterable<UploadService> _services;
+  final String _nextQuestion;
+
+  _ServiceChooserIterable(this._services, this._nextQuestion);
+
+  @override
+  Iterator<UploadService> get iterator => _ServiceChooserIterator(_services, _nextQuestion);
+}
+
+class _ServiceChooserIterator implements Iterator<UploadService> {
+  final List<UploadService> _services;
+  UploadService? _current;
+  final String _nextQuestion;
+
+  _ServiceChooserIterator(Iterable<UploadService> services, this._nextQuestion) : _services = [...services];
+
+  @override
+  UploadService get current => _current!;
+
+  @override
+  bool moveNext() {
+    if (_services.isEmpty || (_current != null && !console.ask(_nextQuestion))) return false;
+
+    _services.remove(_current = _services.singleOrNull ??
+        console.choose<UploadService>(
+          _services,
+          "Select platform",
+          formatter: (entry) => entry.name,
+          ephemeral: true,
+        ));
+    return true;
+  }
 }
 
 /// An exception thrown by [UploadService.upload]

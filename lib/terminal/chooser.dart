@@ -72,7 +72,7 @@ abstract class _Chooser<T, R> {
       var entryFormat = "";
       if (entryIdx == _focused) {
         entryFormat += c.bold.code;
-        entryFormat += (entry is Formattable ? entry.color : c.white).code;
+        entryFormat += (entry is Colorable ? entry.color : c.white).code;
       } else {
         entryFormat += c.brightBlack.code;
       }

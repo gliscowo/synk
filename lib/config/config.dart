@@ -1,7 +1,7 @@
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:dart_console/dart_console.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart';
@@ -14,13 +14,15 @@ part 'config.g.dart';
 
 const _jsonEncoder = JsonEncoder.withIndent("  ");
 
+typedef Json = Map<String, dynamic>;
+
 class ConfigProvider {
   final String _baseDir;
   const ConfigProvider(this._baseDir);
 
   /// Serialize [content] into `<name>.json`. The file's location
   /// may be further differentiated using [path], which is preprended
-  void saveConfigData(String name, Map<String, dynamic> content, {List<String> path = const []}) {
+  void saveConfigData(String name, Json content, {List<String> path = const []}) {
     var file = _resolve(name, path);
     var parent = file.parent;
     if (!parent.existsSync()) {
@@ -32,7 +34,7 @@ class ConfigProvider {
 
   /// Deserialize `<name>.json`. The file's location
   /// may be further differentiated using [path], which is preprended
-  Map<String, dynamic>? readConfigData(String name, {List<String> path = const []}) {
+  Json? readConfigData(String name, {List<String> path = const []}) {
     var file = _resolve(name, path);
     return file.existsSync() ? jsonDecode(file.readAsStringSync()) : null;
   }
@@ -45,7 +47,7 @@ class ConfigProvider {
   ///
   /// The returned pair provides the name of each discovered file and a closure
   /// which, when invoked, loads and deserializes the file
-  Iterable<(String, Map<String, dynamic> Function())> listAllIn(List<String> path) {
+  Iterable<(String, Json Function())> listAllIn(List<String> path) {
     var dir = Directory(join(_baseDirectory, joinAll(path)));
     if (!dir.existsSync()) return Iterable.empty();
 
@@ -75,6 +77,7 @@ class SynkConfig {
   bool _setupCompleted = false;
   List<String>? _defaultMinecraftVersions;
   ChangelogReader? _changelogReader;
+  String? _versionNamePattern;
 
   SynkConfig(this._provider) {
     _load();
@@ -90,6 +93,12 @@ class SynkConfig {
   bool get setupCompleted => _setupCompleted;
   set setupCompleted(bool value) {
     _setupCompleted = value;
+    _save();
+  }
+
+  String get versionNamePattern => _versionNamePattern ?? "[{game_version}] {project_name} - {version}";
+  set versionNamePattern(String? value) {
+    _versionNamePattern = value;
     _save();
   }
 
@@ -114,39 +123,54 @@ class SynkConfig {
     var data = ConfigData.fromJson(json);
     _defaultMinecraftVersions = data.defaultMinecraftVersions;
     _changelogReader = data.changelogReader;
+    _versionNamePattern = data.versionNamePattern;
     _setupCompleted = data.setupCompleted;
   }
 
   void _save() {
-    var json = ConfigData(_defaultMinecraftVersions, _changelogReader, _setupCompleted).toJson();
+    var json = _getData().toJson();
 
     if (_overlay != null) {
+      var overlay = _overlay;
+      this.overlay = null;
+
+      var jsonWithoutOverlay = _getData().toJson();
+      json.removeWhere((key, value) => const DeepCollectionEquality().equals(value, jsonWithoutOverlay[key]));
+
+      this.overlay = overlay;
       _overlay?.overrides = json;
     } else {
       _provider.saveConfigData(_filename, json);
     }
   }
 
-  String get formatted => (Table()
-        ..insertRows([
-          ["Default Minecraft versions", _defaultMinecraftVersions?.join(", ") ?? "none"],
-          ["Default changelog mode", _changelogReader ?? "undefined"],
-        ]))
-      .render();
+  ConfigData _getData() =>
+      ConfigData(_defaultMinecraftVersions, _changelogReader, _versionNamePattern, _setupCompleted);
+
+  String get formatted =>
+      (Table()..insertRows(_getData().formattedValues.map((e) => [e.$1, e.$2]).toList().cast())).render();
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
 class ConfigData {
-  static const defaultValues = ConfigData(null, null, false);
+  static const defaultValues = ConfigData(null, null, null, false);
 
   final List<String>? defaultMinecraftVersions;
   final ChangelogReader? changelogReader;
+  final String? versionNamePattern;
+  @JsonKey(defaultValue: false)
   final bool setupCompleted;
 
-  const ConfigData(this.defaultMinecraftVersions, this.changelogReader, this.setupCompleted);
+  const ConfigData(this.defaultMinecraftVersions, this.changelogReader, this.versionNamePattern, this.setupCompleted);
 
   factory ConfigData.fromJson(Map<String, dynamic> json) => _$ConfigDataFromJson(json);
   Map<String, dynamic> toJson() => _$ConfigDataToJson(this);
+
+  Iterable<(String, String?)> get formattedValues => [
+        ("Default Minecraft versions", defaultMinecraftVersions?.join(", ")),
+        ("Default changelog mode", changelogReader?.name),
+        ("Version name pattern", versionNamePattern)
+      ];
 }
 
 abstract interface class ConfigOverlay {

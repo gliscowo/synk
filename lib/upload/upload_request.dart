@@ -37,10 +37,10 @@ class UploadRequest {
   Map<String, dynamic> toJson() => _$UploadRequestToJson(this);
 
   static List<String> _filesToJson(List<File> files) => files.map((e) => e.path).toList();
-  static List<File> _filesFromJson(List<String> files) => files.map((e) => File(e)).toList();
+  static List<File> _filesFromJson(List<dynamic> files) => files.cast<String>().map((e) => File(e)).toList();
 }
 
-enum ReleaseType implements Formattable {
+enum ReleaseType implements Colorable {
   release(c.green),
   beta(c.yellow),
   alpha(c.red);

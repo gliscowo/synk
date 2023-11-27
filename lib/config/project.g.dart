@@ -20,18 +20,28 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => Project._json(
       Map<String, String>.from(json['secondary_file_patterns'] as Map),
     )..primaryFilePattern = json['primary_file_pattern'] as String?;
 
-Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
-      'type': _$ModrinthProjectTypeEnumMap[instance.type]!,
-      'display_name': instance.displayName,
-      'project_id': instance.projectId,
-      'loaders': instance.loaders,
-      'relations': instance.relations,
-      'id_by_service': instance.idByService,
-      'changelog_file_path': instance.changelogFilePath,
-      'primary_file_pattern': instance.primaryFilePattern,
-      'secondary_file_patterns': instance.secondaryFilePatterns,
-      'config_overlay': instance.configOverlay,
-    };
+Map<String, dynamic> _$ProjectToJson(Project instance) {
+  final val = <String, dynamic>{
+    'type': _$ModrinthProjectTypeEnumMap[instance.type]!,
+    'display_name': instance.displayName,
+    'project_id': instance.projectId,
+    'loaders': instance.loaders,
+    'relations': instance.relations,
+    'id_by_service': instance.idByService,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('changelog_file_path', instance.changelogFilePath);
+  writeNotNull('primary_file_pattern', instance.primaryFilePattern);
+  val['secondary_file_patterns'] = instance.secondaryFilePatterns;
+  val['config_overlay'] = instance.configOverlay;
+  return val;
+}
 
 const _$ModrinthProjectTypeEnumMap = {
   ModrinthProjectType.mod: 'mod',

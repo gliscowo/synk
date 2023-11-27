@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:args/args.dart';
 import 'package:modrinth_api/modrinth_api.dart';
+import 'package:synk/upload/upload_request.dart';
 
 import '../config/config.dart';
 import '../config/database.dart';
@@ -43,7 +44,7 @@ class CreateCommand extends SynkCommand {
       "Project ID",
       (input) {
         if (!RegExp("[a-z-_]").hasMatch(input)) {
-          return "$input is not a valid project ID, which must only contain lowercase ASCII, hyphens and underscores";
+          return "$input is not a valid project ID, which must only contain lowercase English letters, hyphens and underscores";
         }
 
         if (_db.contains(input)) {
@@ -74,17 +75,7 @@ class CreateCommand extends SynkCommand {
 
     final idByService = <String, String>{};
     if (console.ask("Set up platform-specific project IDs now", ephemeral: true)) {
-      final services = [..._uploadServices.all];
-      while (services.isNotEmpty) {
-        final service = services.length == 1
-            ? services.single
-            : console.choose(
-                services,
-                "Choose platform",
-                formatter: (entry) => entry.name,
-                ephemeral: true,
-              );
-
+      for (final service in _uploadServices.choose("Add more")) {
         idByService[service.id] = await console.promptValidatedAsync(
           "${service.name} project ID",
           (input) async => !await Spinner.wait("Validating...", service.isProject(input))
@@ -92,10 +83,44 @@ class CreateCommand extends SynkCommand {
               : null,
           allowOverride: true,
         );
-
-        services.remove(service);
-        if (services.isNotEmpty && !console.ask("Add more", ephemeral: true)) break;
       }
+    }
+
+    final relations = <Relation>[];
+    if (console.ask("Add relations", ephemeral: true)) {
+      do {
+        final relationName = console.prompt("Relation name");
+        final relationType = console.choose(
+          ModrinthDependencyType.values,
+          "Relation type",
+          formatter: (entry) => entry.name,
+        );
+
+        final idByService = <String, String>{};
+        for (final service in _uploadServices.choose("Add more")) {
+          idByService[service.id] = console.prompt("${service.name} dependency ID");
+        }
+
+        relations.add(Relation(relationName, relationType, idByService));
+      } while (console.ask("Add another relation"));
+    }
+
+    String? primaryFilePattern;
+    var secondaryFilePatterns = <String, String>{};
+    if (console.ask("Set up artifact discovery", ephemeral: true)) {
+      primaryFilePattern = console.prompt("Primary file pattern");
+
+      if (console.ask("Add secondary file patterns")) {
+        do {
+          final patternId = console.prompt("Pattern ID", ephemeral: true);
+          secondaryFilePatterns[patternId] = console.prompt("Secondary file pattern '$patternId'");
+        } while (console.ask("Add more", ephemeral: true));
+      }
+    }
+
+    String? changelogFilePath;
+    if (console.ask("Add a changelog file", ephemeral: true)) {
+      changelogFilePath = console.prompt("Changelog file path");
     }
 
     final project = _db[projectId] = Project(
@@ -103,11 +128,11 @@ class CreateCommand extends SynkCommand {
       displayName,
       projectId,
       chosenLoaders,
-      /* TODO relations */ [],
+      relations,
       idByService,
-      null,
-      null,
-      {},
+      changelogFilePath,
+      primaryFilePattern,
+      secondaryFilePatterns,
     );
     _config.overlay = ConfigOverlay.ofProject(_db, project);
 

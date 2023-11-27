@@ -226,7 +226,7 @@ const String valueColor = "${c.ansiEscape}0m";
 
 String rgbColor(int rgb) => "${c.ansiEscape}38;2;${rgb >> 16};${(rgb >> 8) & 0xFF};${rgb & 0xFF}m";
 
-abstract class Formattable {
+abstract class Colorable {
   c.AnsiControlSequence get color;
 }
 

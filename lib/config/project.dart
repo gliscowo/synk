@@ -7,12 +7,14 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
 
+import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
 import '../upload/upload_request.dart';
+import 'config.dart';
 
 part 'project.g.dart';
 
-@JsonSerializable(fieldRename: FieldRename.snake, constructor: "_json")
+@JsonSerializable(fieldRename: FieldRename.snake, constructor: "_json", includeIfNull: false)
 class Project {
   ModrinthProjectType type;
   String displayName;
@@ -82,23 +84,32 @@ class Project {
         ..insertRows([
           ["Project ID", projectId],
           ["Loaders", loaders.join(", ")],
-          [],
-          if (primaryFilePattern != null) ["Primary files", primaryFilePattern!],
-          if (secondaryFilePatterns.isNotEmpty) ...[
-            ["Secondary files"],
-            for (var MapEntry(:key, :value) in secondaryFilePatterns.entries) ["└─$key", value]
+          if (primaryFilePattern != null || secondaryFilePatterns.isNotEmpty) ...[
+            [],
+            if (primaryFilePattern != null) ["Primary files", primaryFilePattern!],
+            if (secondaryFilePatterns.isNotEmpty) ...[
+              ["Secondary files"],
+              for (var MapEntry(:key, :value) in secondaryFilePatterns.entries) ["└─$key", value]
+            ],
           ],
           [],
           for (var MapEntry(:key, :value) in idByService.entries) ["$key id", value],
           if (relations.isNotEmpty) ...[
             [],
-            ["Relations"],
+            [c.bold("Relations")],
             [],
             for (var Relation(:name, :type, :projectIdByPlatform) in relations) ...[
               [name, type.name],
               for (var MapEntry(:key, :value) in projectIdByPlatform.entries) ["└─$key", "└─$value"]
             ]
           ],
+          if (configOverlay.isNotEmpty) ...[
+            [],
+            [c.bold("Config overrides")],
+            [],
+            for (var (option, value) in ConfigData.fromJson(configOverlay).formattedValues)
+              if (value != null) [option, value]
+          ]
         ]))
       .render();
 

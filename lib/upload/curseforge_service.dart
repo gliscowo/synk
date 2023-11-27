@@ -94,6 +94,7 @@ class CurseForgeUploadService implements UploadService {
 
   Future<Response> _uploadFile(Project project, _CurseForgeUploadPayload payload, File file) async {
     final request = MultipartRequest("POST", Uri.parse("$_baseUrl/projects/${project.idByService[id]!}/upload-file"))
+      ..headers.addAll(_headers)
       ..fields["metadata"] = jsonEncode(payload.toJson())
       ..files
           .add(await MultipartFile.fromPath("file", file.path, contentType: MediaType("application", "java-archive")));

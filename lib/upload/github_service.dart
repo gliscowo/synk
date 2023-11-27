@@ -59,7 +59,6 @@ class GitHubUploadService implements UploadService {
       release = await _gh.repositories.createRelease(
         RepositorySlug.full(project.idByService[id]!),
         CreateRelease.from(
-          // TODO gh-specific titles
           tagName: request.version,
           name: request.title,
           targetCommitish: targetCommitish,

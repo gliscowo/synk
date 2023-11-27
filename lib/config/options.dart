@@ -49,6 +49,19 @@ List<Option<SynkConfig>> createConfigOptions(ModrinthApi mr) => [
         );
 
         config.minecraftVersions = chosenVersions.isNotEmpty ? chosenVersions : null;
+      }),
+      Option("Version name pattern", (config) {
+        print(c.hint("""The following placeholders are available:
+  - {game_version} is the compatible game version marker (eg. 1.20+ or 1.19.2)
+  - {project_name} is the project's display name
+  - {version} is the version of the artifact being uploaded
+  """));
+
+        final newPattern = console.prompt(
+          "Version name pattern (blank to reset)",
+        );
+
+        config.versionNamePattern = newPattern.isNotEmpty ? newPattern : null;
       })
     ];
 
@@ -129,19 +142,9 @@ List<Option<Project>> createProjectOptions(UploadServices uploadServices, Modrin
           );
 
           final idByService = <String, String>{};
-          final services = [...uploadServices.all];
-          do {
-            final service = services.singleOrNull ??
-                console.choose<UploadService>(
-                  services,
-                  "Choose platform",
-                  formatter: (entry) => entry.name,
-                  ephemeral: true,
-                );
-
+          for (final service in uploadServices.choose("Add more")) {
             idByService[service.id] = console.prompt("${service.name} dependency ID");
-            services.remove(service);
-          } while (services.isNotEmpty && console.ask("Add more"));
+          }
 
           project.relations.add(Relation(relationName, relationType, idByService));
           print(c.success("New relation '$relationName' added"));

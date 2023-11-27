@@ -12,9 +12,9 @@
             "type": "dart",
             "program": "bin/devloop.dart",
             "console": "terminal",
-            "env": {
-                "SYNK_CONFIG_DIR": "synk_dev"
-            }
+            // "env": {
+            //     "SYNK_CONFIG_DIR": "synk_dev"
+            // }
         }
     ]
 }

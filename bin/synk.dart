@@ -54,7 +54,7 @@ Future<void> main(List<String> arguments) async {
     ..addCommand(EditCommand(db, config, configOptions, projectOptions))
     ..addCommand(SetupCommand(tokens, uploadServices, config, configOptions))
     ..addCommand(PreFlightCommand(config, db, uploadServices))
-    ..addCommand(UploadCommand(config, db, mr));
+    ..addCommand(UploadCommand(configProvider, config, db, mr, uploadServices));
 
   if (!config.setupCompleted) {
     arguments = const ["setup"];

@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:args/args.dart' show ArgResults;
-import 'package:synk/config/tokens.dart';
-import 'package:synk/upload/upload_service.dart';
 
 import '../config/config.dart';
 import '../config/options.dart';
+import '../config/tokens.dart';
 import '../terminal/ansi.dart' as c;
 import '../terminal/console.dart';
+import '../upload/upload_service.dart';
 import 'synk_command.dart';
 
 final _tokensSentinel = Option<SynkConfig>("Add/change tokens", (_) {});
