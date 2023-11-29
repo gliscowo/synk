@@ -162,6 +162,15 @@ class UploadCommand extends SynkCommand {
       version = askUserIfVersionUnknown(basename(files.first.path), await tryReadVersion(project, files.first));
     } else {
       files = project.findPrimaryFiles()!.where((element) => !element.path.contains("sources")).toList();
+      if (files.isEmpty) {
+        print(c.error("Artifact discovery found nothing, you must manually provide file(s) as an argument"));
+        print(c.hint(
+          "Unless you actually have no artifacts ready, it's quite likely your primary file pattern is misconfigured. Run 'synk edit ${project.projectId}' to fix it",
+        ));
+
+        return null;
+      }
+
       final versions = (await Future.wait(files.map((e) => tryReadVersion(project, e).then((v) => (e, v))))).map((e) {
         var version = Version.none;
         if (e.$2 != null) {
