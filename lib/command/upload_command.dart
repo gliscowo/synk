@@ -24,6 +24,7 @@ class UploadCommand extends SynkCommand {
   static const _retryArg = "retry";
   static const _dryRunArg = "dry-run";
   static const _confirmServicesArg = "confirm-services";
+
   static const _lastUploadKey = "last_upload";
 
   final ConfigProvider _provider;
@@ -130,7 +131,7 @@ class UploadCommand extends SynkCommand {
           continue;
         }
 
-        _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
+        await _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
       }
     }
 

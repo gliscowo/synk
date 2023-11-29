@@ -59,7 +59,7 @@ class ModrinthUploadService implements UploadService {
       throw UploadException("Modrinth API returned an error: ${e.error} / ${e.description}");
     }
 
-    return Uri.parse("https://modrinth.com/${project.type}/${project.idByService[id]!}/version/${newVersion.id}");
+    return Uri.parse("https://modrinth.com/${project.type.name}/${project.idByService[id]!}/version/${newVersion.id}");
   }
 }
 
