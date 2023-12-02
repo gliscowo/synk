@@ -89,7 +89,7 @@ class CurseForgeUploadService implements UploadService {
       }
     }
 
-    return Uri.parse("https://curseforge.com/minecraft/mc-mods/${project.idByService[id]}/files/$parentFileId");
+    return Uri.parse("https://curseforge.com/minecraft/mc-mods/${project.projectId}/files/$parentFileId");
   }
 
   Future<Response> _uploadFile(Project project, _CurseForgeUploadPayload payload, File file) async {
