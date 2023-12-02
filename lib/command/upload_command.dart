@@ -24,8 +24,11 @@ class UploadCommand extends SynkCommand {
   static const _retryArg = "retry";
   static const _dryRunArg = "dry-run";
   static const _confirmServicesArg = "confirm-services";
+  static const _overrideVersionsArg = "override-game-versions";
 
   static const _lastUploadKey = "last_upload";
+
+  static final _stableGameVersion = RegExp(r"^(\d+)\.(\d+)(\.(\d+))?$");
 
   final ConfigProvider _provider;
   final ProjectDatabase _db;
@@ -54,6 +57,11 @@ class UploadCommand extends SynkCommand {
         _confirmServicesArg,
         help: "Ask before uploading to each individual service",
         negatable: false,
+      )
+      ..addFlag(
+        _overrideVersionsArg,
+        help: "Override the game versions used during this specific upload process",
+        negatable: false,
       );
   }
 
@@ -75,7 +83,7 @@ class UploadCommand extends SynkCommand {
     UploadRequest request;
 
     if (!args.wasParsed(_retryArg)) {
-      final newRequest = await getRequestFromUser(args, project);
+      final newRequest = await _getRequestFromUser(args, project);
       if (newRequest == null) return;
 
       request = newRequest;
@@ -98,8 +106,14 @@ class UploadCommand extends SynkCommand {
             ..insertRow(["Version", request.version])
             ..insertRow(["Release Type", request.releaseType.color(request.releaseType.name)])
             ..insertRow(["Game Versions", request.compatibleGameVersions.join(", ")])
-            ..insertRow(["Changelog", request.changelog.truncate(60)]))
+            ..insertRow(["Changelog", request.changelog.truncate(60)])
+            ..insertRow([])
+            ..insertRows(
+              request.files.map((e) => ["", basename(e.path)]).toList()..[0][0] = "${request.files.length} Files",
+            ))
           .render());
+
+    if (!console.ask("Proceed with upload", ephemeral: true)) return;
 
     final uploadSucceeded = <String, bool>{};
     final log = {
@@ -141,7 +155,7 @@ class UploadCommand extends SynkCommand {
   @override
   String get invocation => "${super.invocation} [<file(s)>]";
 
-  Future<UploadRequest?> getRequestFromUser(ArgResults args, Project project) async {
+  Future<UploadRequest?> _getRequestFromUser(ArgResults args, Project project) async {
     String version;
     List<File> files;
     if (args.rest.length < 2 && project.primaryFilePattern == null) {
@@ -159,7 +173,7 @@ class UploadCommand extends SynkCommand {
         return null;
       }
 
-      version = askUserIfVersionUnknown(basename(files.first.path), await tryReadVersion(project, files.first));
+      version = _askUserIfVersionUnknown(basename(files.first.path), await _tryReadVersion(project, files.first));
     } else {
       files = project.findPrimaryFiles()!.where((element) => !element.path.contains("sources")).toList();
       if (files.isEmpty) {
@@ -171,7 +185,7 @@ class UploadCommand extends SynkCommand {
         return null;
       }
 
-      final versions = (await Future.wait(files.map((e) => tryReadVersion(project, e).then((v) => (e, v))))).map((e) {
+      final versions = (await Future.wait(files.map((e) => _tryReadVersion(project, e).then((v) => (e, v))))).map((e) {
         var version = Version.none;
         if (e.$2 != null) {
           try {
@@ -195,7 +209,7 @@ class UploadCommand extends SynkCommand {
         ..clear()
         ..add(chosen.$1)
         ..addAll(project.resolveSecondaryFiles(chosen.$1));
-      version = askUserIfVersionUnknown(basename(chosen.$1.path), chosen.$2);
+      version = _askUserIfVersionUnknown(basename(chosen.$1.path), chosen.$2);
     }
 
     _config.overlay = ConfigOverlay.ofProject(_db, project);
@@ -207,7 +221,7 @@ class UploadCommand extends SynkCommand {
     );
 
     var gameVersions = _config.minecraftVersions;
-    if (gameVersions.isEmpty) {
+    if (gameVersions.isEmpty || args.wasParsed(_overrideVersionsArg)) {
       final versionList = (await Spinner.wait("Fetching versions", _mr.tags.getGameVersions()))
           .where((e) => e.versionType == ModrinthGameVersionType.release)
           .map((e) => e.version)
@@ -216,14 +230,23 @@ class UploadCommand extends SynkCommand {
       gameVersions = console.chooseMultiple(versionList, "Select compatible Minecraft versions");
     }
 
-    final parsedVersion = Version.parse(version);
-    final displayVersion = Version(parsedVersion.major, parsedVersion.minor, parsedVersion.patch);
+    final parsedGameVersions = gameVersions.map(_tryParseVersion).whereType<Version>();
+
+    var minGameVersion = parsedGameVersions.isNotEmpty
+        ? parsedGameVersions.reduce((e1, e2) => e1 < e2 ? e1 : e2).toString()
+        : parsedGameVersions.first.toString();
+    if (minGameVersion.endsWith(".0")) minGameVersion = minGameVersion.substring(0, minGameVersion.length - 2);
+    if (parsedGameVersions.length > 1) minGameVersion += "+";
+
+    final parsedVersion = _tryParseVersion(version);
+    final processedVersion =
+        parsedVersion != null ? "${parsedVersion.major}.${parsedVersion.minor}.${parsedVersion.patch}" : version;
 
     final changelog = await _config.changelogReader.getChangelog(project);
     final title = _config.versionNamePattern
         .replaceAll("{project_name}", project.displayName)
-        .replaceAll("{version}", displayVersion.toString())
-        .replaceAll("{game_version}", gameVersions.first);
+        .replaceAll("{version}", processedVersion)
+        .replaceAll("{game_version}", minGameVersion);
 
     return UploadRequest(title, version, changelog, releaseType, gameVersions, project.relations, files);
   }
@@ -236,7 +259,7 @@ class UploadCommand extends SynkCommand {
   ///  - Fabric mods
   ///  - Quilt mods
   ///  - .mrpack modpacks
-  Future<String?> tryReadVersion(Project project, File file) async {
+  Future<String?> _tryReadVersion(Project project, File file) async {
     Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(await file.readAsBytes());
@@ -278,12 +301,28 @@ class UploadCommand extends SynkCommand {
     return null;
   }
 
-  String askUserIfVersionUnknown(String filename, String? maybeVersion) {
+  String _askUserIfVersionUnknown(String filename, String? maybeVersion) {
     if (maybeVersion == null) {
       print(c.warning("The version of file '$filename' could not be determined"));
       return console.prompt("Enter version");
     } else {
       return maybeVersion;
+    }
+  }
+
+  /// Try to interpret [versionString] as a semantic version. This method first tries
+  /// to do this via [Version.parse] - if that fails, it tries to extract at least a
+  /// major and minor version (optionally a patch), omitting build and prerelease.
+  ///
+  /// If both of these approaches fail, [null] is returned
+  Version? _tryParseVersion(String versionString) {
+    try {
+      return Version.parse(versionString);
+    } catch (_) {
+      final match = _stableGameVersion.firstMatch(versionString);
+      if (match == null) return null;
+
+      return Version(int.parse(match[1]!), int.parse(match[2]!), match[3] != null ? int.parse(match[3]!) : 0);
     }
   }
 
