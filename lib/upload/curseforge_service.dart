@@ -50,8 +50,9 @@ class CurseForgeUploadService implements UploadService {
   Future<Uri> upload(Project project, UploadRequest request) async {
     // TODO maybe support other changelog types here
     final changelogType = _CurseForgeChangelogType.markdown;
-    final relations =
-        request.relations.map((e) => _CurseForgeRelation(e.projectIdByPlatform[id]!, e.type.toCurseForge())).toList();
+    final relations = request.relations.isNotEmpty
+        ? request.relations.map((e) => _CurseForgeRelation(e.projectIdByPlatform[id]!, e.type.toCurseForge())).toList()
+        : null;
 
     final parentUploadResponse = await _uploadFile(
       project,
