@@ -62,6 +62,7 @@ class GitHubUploadService implements UploadService {
           tagName: request.version,
           name: request.title,
           targetCommitish: targetCommitish,
+          body: request.changelog,
           isDraft: false,
           isPrerelease: request.releaseType != ReleaseType.release,
         ),
@@ -73,7 +74,7 @@ class GitHubUploadService implements UploadService {
     final assets = (await Future.wait(request.files.map((e) => e.readAsBytes()))).indexed.map((e) {
       final filePath = request.files[e.$1].path;
       return CreateReleaseAsset(
-        name: basename(filePath),
+        name: Uri.encodeQueryComponent(basename(filePath)),
         contentType: switch (extension(filePath)) {
           ".zip" || ".litemod" || ".mrpack" => "application/zip",
           ".jar" => "application/java-archive",
