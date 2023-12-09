@@ -136,7 +136,7 @@ class UploadCommand extends SynkCommand {
           continue;
         }
 
-        _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
+        await _tryUpload(args.wasParsed(_dryRunArg), project, request, service, uploadSucceeded);
       }
     } else {
       for (final serviceId in project.idByService.keys) {
