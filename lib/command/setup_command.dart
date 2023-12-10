@@ -28,8 +28,8 @@ class SetupCommand extends SynkCommand {
     print("${c.brightBlack(">")} Welcome to synk! Before you can start uploading, we need to get some things set up");
     print("${c.brightBlack(">")} First off, let's configure the tokens and platforms to use for uploading:");
 
-    for (final service in _uploadServices.choose("Add more")) {
-      var token = console.prompt("Token", secret: true);
+    for (final service in _uploadServices.choose("Add another token")) {
+      var token = console.prompt("${service.name} Token", secret: true);
       _tokens[service.id] = token.isNotEmpty ? token : null;
     }
 

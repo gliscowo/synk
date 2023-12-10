@@ -14,6 +14,8 @@ class GitHubUploadService implements UploadService {
   final String id = "github";
   @override
   final String name = "GitHub";
+  @override
+  final bool supportsRelations = false;
 
   final GitHub _gh;
   final TokenStore _tokens;

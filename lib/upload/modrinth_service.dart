@@ -11,9 +11,10 @@ import 'upload_service.dart';
 class ModrinthUploadService implements UploadService {
   @override
   final String id = "modrinth";
-
   @override
   final String name = "Modrinth";
+  @override
+  final bool supportsRelations = true;
 
   final ModrinthApi _mr;
   final TokenStore _tokens;

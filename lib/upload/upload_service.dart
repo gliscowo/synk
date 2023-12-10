@@ -13,6 +13,10 @@ abstract interface class UploadService {
   /// A user-friendly string used to identify this service
   String get name;
 
+  /// Whether this service supports declaring relations
+  /// between different projects
+  bool get supportsRelations;
+
   /// Perform an upload for [project] as specified by [request]
   /// and return the URL of the resulting release
   ///
@@ -37,7 +41,7 @@ abstract interface class UploadService {
   Future<String?> testAuth();
 }
 
-class UploadServices {
+class UploadServices with Iterable<UploadService> {
   final Map<String, UploadService> _services = {};
   UploadServices(List<UploadService> services) {
     for (final service in services) {
@@ -57,7 +61,12 @@ class UploadServices {
   /// `null` if no such service is known to this provider
   UploadService? operator [](String id) => _services[id];
 
-  Iterable<UploadService> choose(String nextMessage) => _ServiceChooserIterable(_services.values, nextMessage);
+  @override
+  Iterator<UploadService> get iterator => _services.values.iterator;
+}
+
+extension ServiceChoosing on Iterable<UploadService> {
+  Iterable<UploadService> choose(String nextMessage) => _ServiceChooserIterable(this, nextMessage);
 }
 
 class _ServiceChooserIterable with Iterable<UploadService> {

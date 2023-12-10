@@ -20,9 +20,10 @@ class CurseForgeUploadService implements UploadService {
 
   @override
   final String id = "curseforge";
-
   @override
   final String name = "CurseForge";
+  @override
+  final bool supportsRelations = true;
 
   final Client _client;
   final TokenStore _tokens;

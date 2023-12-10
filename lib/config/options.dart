@@ -142,7 +142,9 @@ List<Option<Project>> createProjectOptions(UploadServices uploadServices, Modrin
           );
 
           final idByService = <String, String>{};
-          for (final service in uploadServices.choose("Add more")) {
+          for (final service in uploadServices
+              .where((element) => element.supportsRelations)
+              .choose("Add dependency ID for another platform")) {
             idByService[service.id] = console.prompt("${service.name} dependency ID");
           }
 
@@ -197,7 +199,7 @@ List<Option<Project>> createProjectOptions(UploadServices uploadServices, Modrin
             print(c.hint("${project.displayName} has no secondary file patterns, adding a new one"));
           }
 
-          final newPatternId = console.prompt("Pattern ID");
+          final newPatternId = console.prompt("Pattern name");
           final newPattern = console.prompt("Pattern");
 
           project.secondaryFilePatterns[newPatternId] = newPattern;

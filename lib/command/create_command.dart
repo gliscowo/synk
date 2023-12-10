@@ -75,7 +75,7 @@ class CreateCommand extends SynkCommand {
 
     final idByService = <String, String>{};
     if (console.ask("Set up platform-specific project IDs now", ephemeral: true)) {
-      for (final service in _uploadServices.choose("Add more")) {
+      for (final service in _uploadServices.choose("Add another one")) {
         idByService[service.id] = await console.promptValidatedAsync(
           "${service.name} project ID",
           (input) async => !await Spinner.wait("Validating...", service.isProject(input))
@@ -97,7 +97,7 @@ class CreateCommand extends SynkCommand {
         );
 
         final idByService = <String, String>{};
-        for (final service in _uploadServices.choose("Add more")) {
+        for (final service in _uploadServices.choose("Add dependency ID for another platform")) {
           idByService[service.id] = console.prompt("${service.name} dependency ID");
         }
 
@@ -114,7 +114,7 @@ class CreateCommand extends SynkCommand {
         do {
           final patternId = console.prompt("Pattern ID", ephemeral: true);
           secondaryFilePatterns[patternId] = console.prompt("Secondary file pattern '$patternId'");
-        } while (console.ask("Add more", ephemeral: true));
+        } while (console.ask("Add another one", ephemeral: true));
       }
     }
 
