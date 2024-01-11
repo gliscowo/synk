@@ -357,8 +357,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: c1154c8
-      resolved-ref: c1154c839f860894e3e70f393a84758350ca5741
+      ref: "27f67ef"
+      resolved-ref: "27f67efa35c32fec861eafc94ab709242ce35983"
       url: "https://github.com/gliscowo/modrinth_api"
     source: git
     version: "0.1.0"
