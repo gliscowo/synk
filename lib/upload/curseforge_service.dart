@@ -61,7 +61,7 @@ class CurseForgeUploadService implements UploadService {
         request.changelog,
         changelogType,
         request.releaseType,
-        gameVersions: await _mapVersions(request.compatibleGameVersions),
+        gameVersions: await _mapVersions(request.compatibleGameVersions, project.loaders),
         displayName: request.title,
         relations: relations,
       ),
@@ -116,7 +116,7 @@ class CurseForgeUploadService implements UploadService {
   /// 3. For each element of [minecraftVersions], pick the first mapping
   /// where the `name` field equals the element *or* ask the user to provide
   /// the CurseForge equivalent if no such mapping exists (like for snapshot releases)
-  Future<List<int>> _mapVersions(List<String> minecraftVersions) async {
+  Future<List<int>> _mapVersions(List<String> minecraftVersions, List<String> loaders) async {
     final response = await _client.get(
       Uri.parse("$_baseUrl/game/versions"),
       headers: _headers,
@@ -131,19 +131,28 @@ class CurseForgeUploadService implements UploadService {
         .toList()
       ..sort((a, b) => -(a["gameVersionTypeID"] as int).compareTo(b["gameVersionTypeID"] as int));
 
-    return minecraftVersions.map((e) {
-      do {
-        if (_snapshot.hasMatch(e)) {
-          e = "${console.prompt("Release version equivalent for snapshot $e")}-Snapshot";
-        }
+    return [
+      ...minecraftVersions.map((e) {
+        do {
+          if (_snapshot.hasMatch(e)) {
+            e = "${console.prompt("Release version equivalent for snapshot $e")}-Snapshot";
+          }
 
+          for (var mapping in cfVersionList) {
+            if (mapping["name"] == e) return mapping["id"] as int;
+          }
+
+          e = console.prompt("CurseForge equivalent of snapshot version $e");
+        } while (true);
+      }),
+      ...loaders.map((e) {
         for (var mapping in cfVersionList) {
-          if (mapping["name"] == e) return mapping["id"] as int;
+          if ((mapping["name"] as String).toLowerCase() == e.toLowerCase()) return mapping["id"] as int;
         }
 
-        e = console.prompt("CurseForge equivalent of snapshot version $e");
-      } while (true);
-    }).toList();
+        throw UploadException("Could not locate CurseForge ID for loader '$e'");
+      })
+    ];
   }
 
   Map<String, String> get _headers => {"x-api-token": _tokens[id] ?? ""};

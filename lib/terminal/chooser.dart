@@ -95,7 +95,7 @@ abstract class _Chooser<T, R> {
 }
 
 class Chooser<T> extends _Chooser<T, T> {
-  Chooser(super.options, super.focused, {EntryFormatter<T>? formatter}) : super(formatter: formatter);
+  Chooser(super.options, super.focused, {super.formatter});
 
   @override
   void _keyCallback(Key input) {}
@@ -107,9 +107,8 @@ class MultiChooser<T> extends _Chooser<T, List<T>> {
   final List<T> _selected;
   final bool _allowNone;
 
-  MultiChooser(super._options, super._focused, this._allowNone, List<T> selected, {EntryFormatter<T>? formatter})
-      : _selected = List.from(selected),
-        super(formatter: formatter);
+  MultiChooser(super._options, super._focused, this._allowNone, List<T> selected, {super.formatter})
+      : _selected = List.from(selected);
 
   @override
   void _keyCallback(Key input) {
