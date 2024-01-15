@@ -1,6 +1,6 @@
 name: synk
 description: A sample command-line application.
-version: 0.1.0-alpha.1
+version: 0.1.0-beta.1
 publish_to: none
 repository: https://github.com/gliscowo/synk
 
@@ -15,14 +15,14 @@ dependencies:
   modrinth_api:
     git:
       url: https://github.com/gliscowo/modrinth_api
-      ref: 27f67ef
+      ref: a896d32
   args: ^2.4.2
   crypto: ^3.0.3
   http_parser: ^4.0.2
   github: ^9.17.0
   glob: ^2.1.2
   archive: ^3.3.7
-  toml: ^0.14.0
+  toml: ^0.15.0
   pub_semver: ^2.1.4
   collection: ^1.18.0
 
