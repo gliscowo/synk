@@ -289,6 +289,13 @@ class UploadCommand extends SynkCommand {
           return version;
         }
       }
+
+      final neoModsToml = archive.findFile("META-INF/neoforge.mods.toml");
+      if (neoModsToml != null && project.loaders.contains("neoforge")) {
+        if (TomlDocument.parse(neoModsToml.contentString).toMap() case {"mods": [{"version": String version}, ...]}) {
+          return version;
+        }
+      }
     } else if (project.type == ModrinthProjectType.modpack && ext == ".mrpack") {
       final index = archive.findFile("modrinth.index.json");
       if (index != null) {
