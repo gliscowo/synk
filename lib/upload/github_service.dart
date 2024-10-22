@@ -2,6 +2,7 @@ import 'package:github/github.dart';
 import 'package:http/http.dart';
 import 'package:modrinth_api/modrinth_api.dart';
 import 'package:path/path.dart';
+import 'package:synk/terminal/spinner.dart';
 
 import '../config/project.dart';
 import '../config/tokens.dart';
@@ -54,19 +55,28 @@ class GitHubUploadService implements UploadService {
 
   @override
   Future<Uri> upload(Project project, UploadRequest request) async {
-    final targetCommitish = console.prompt("GitHub tag target commitish (empty for HEAD on remote main branch)");
+    var repoSlug = RepositorySlug.full(project.idByService[id]!);
+    final mainBranch = await Spinner.wait(
+      "Fetching main branch",
+      _gh.repositories.getRepository(repoSlug).then((repo) => repo.defaultBranch),
+    );
+
+    final targetCommitish = console.prompt(
+      "GitHub tag target commitish (empty for HEAD on $mainBranch)",
+      ephemeral: true,
+    );
 
     Release release;
     try {
       release = await _gh.repositories.createRelease(
-        RepositorySlug.full(project.idByService[id]!),
+        repoSlug,
         CreateRelease.from(
           tagName: request.version,
           name: request.title,
           targetCommitish: targetCommitish,
           body: request.changelog,
           isDraft: false,
-          isPrerelease: request.releaseType != ReleaseType.release,
+          isPrerelease: request.releaseType == ReleaseType.alpha,
         ),
       );
     } on Exception catch (e) {
