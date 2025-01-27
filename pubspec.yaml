@@ -1,6 +1,6 @@
 name: synk
 description: A sample command-line application.
-version: 0.1.0-beta.3
+version: 0.1.0-beta.4
 publish_to: none
 repository: https://github.com/gliscowo/synk
 
@@ -21,7 +21,7 @@ dependencies:
   http_parser: ^4.0.2
   github: ^9.17.0
   glob: ^2.1.2
-  archive: ^3.3.7
+  archive: ^4.0.2
   toml: ^0.16.0
   pub_semver: ^2.1.4
   collection: ^1.18.0
